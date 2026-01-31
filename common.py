@@ -53,14 +53,39 @@ def get_hardware_info():
             hardware_info["gpu_name"] = device_prop.name
             hardware_info["gpu_vram_total"] = round(device_prop.total_memory / (1024 ** 3), 2)
             
-            high_perf_flags = ["40", "3090", "3080", "a100", "a10", "rtx 6000", "titan"]
-            mid_perf_flags = ["30", "20", "1660", "1650 super"]
-            if any(flag.lower() in hardware_info["gpu_name"].lower() for flag in high_perf_flags):
+            # 按显存大小和显卡型号分级
+            gpu_vram = hardware_info["gpu_vram_total"]
+            gpu_name_lower = hardware_info["gpu_name"].lower()
+            
+            # 高性能显卡标志（24GB+显存）
+            high_perf_flags = ["5090", "4090", "3090", "a100", "a10", "rtx 6000", "titan"]
+            # 中高性能显卡标志（16GB显存）
+            mid_high_perf_flags = ["4080", "3080 ti"]
+            # 中性能显卡标志（12GB显存）
+            mid_perf_flags = ["4070 ti", "3080", "3070 ti"]
+            # 中低性能显卡标志（8GB显存）
+            mid_low_perf_flags = ["4070", "3070", "2080 ti", "2080", "1660 ti", "1660 super"]
+            
+            if gpu_vram >= 24 or any(flag.lower() in gpu_name_lower for flag in high_perf_flags):
                 hardware_info["is_high_perf"] = True
                 hardware_info["is_low_perf"] = False
-            elif any(flag.lower() in hardware_info["gpu_name"].lower() for flag in mid_perf_flags):
+                hardware_info["perf_level"] = "high"  # 24GB+
+            elif gpu_vram >= 16 or any(flag.lower() in gpu_name_lower for flag in mid_high_perf_flags):
                 hardware_info["is_high_perf"] = False
                 hardware_info["is_low_perf"] = False
+                hardware_info["perf_level"] = "mid_high"  # 16GB
+            elif gpu_vram >= 12 or any(flag.lower() in gpu_name_lower for flag in mid_perf_flags):
+                hardware_info["is_high_perf"] = False
+                hardware_info["is_low_perf"] = False
+                hardware_info["perf_level"] = "mid"  # 12GB
+            elif gpu_vram >= 8 or any(flag.lower() in gpu_name_lower for flag in mid_low_perf_flags):
+                hardware_info["is_high_perf"] = False
+                hardware_info["is_low_perf"] = False
+                hardware_info["perf_level"] = "mid_low"  # 8GB
+            else:
+                hardware_info["is_high_perf"] = False
+                hardware_info["is_low_perf"] = True
+                hardware_info["perf_level"] = "low"  # <8GB
             print(f"【硬件检测】显卡：{hardware_info['gpu_name']}，显存：{hardware_info['gpu_vram_total']}GB")
         except Exception as e:
             print(f"【提示】显卡信息检测失败，自动使用兼容模式：{e}")
@@ -88,7 +113,8 @@ set_high_priority()
 
 # -------------------------- 初始化ChatHandler（支持所有模型） --------------------------
 chat_handlers = ["None", "LLaVA-1.5", "LLaVA-1.6", "Moondream2", "nanoLLaVA", 
-                 "llama3-Vision-Alpha", "MiniCPM-v2.6", "MiniCPM-v4", "llama-joycaption"]
+                 "llama3-Vision-Alpha", "MiniCPM-v2.6", "MiniCPM-v4", "MiniCPM-V-4.5", 
+                 "LFM2.5-VL", "GLM-4.6V", "llama-joycaption"]
 
 # 动态导入各类ChatHandler
 Gemma3ChatHandler = None
@@ -147,6 +173,23 @@ try:
     print(f"【模型支持】成功兼容LFM2-VL模型")
 except ImportError:
     print(f"【模型支持】LFM2-VL模型暂不兼容（忽略，不影响其他功能）")
+
+# 添加对MiniCPM-V-4.5的支持
+MiniCPMv45ChatHandler = None
+try:
+    from llama_cpp.llama_chat_format import MiniCPMv45ChatHandler
+    chat_handlers += ["MiniCPM-V-4.5"]
+    print(f"【模型支持】成功兼容MiniCPM-V-4.5模型")
+except ImportError:
+    print(f"【模型支持】MiniCPM-V-4.5模型暂不兼容（忽略，不影响其他功能）")
+
+# 添加对LFM2.5-VL的支持
+LFM25VLChatHandler = None
+try:
+    from llama_cpp.llama_chat_format import LFM25VLChatHandler
+    print(f"【模型支持】成功兼容LFM2.5-VL模型")
+except ImportError:
+    print(f"【模型支持】LFM2.5-VL模型暂不兼容（忽略，不影响其他功能）")
 
 # -------------------------- 通用工具类 --------------------------
 class AnyType(str):
@@ -303,6 +346,8 @@ class LLAMA_CPP_STORAGE:
                 return Llama3VisionAlphaChatHandler
             elif chat_handler_name == "MiniCPM-v2.6":
                 return MiniCPMv26ChatHandler
+            elif chat_handler_name == "MiniCPM-V-4.5" and MiniCPMv45ChatHandler is not None:
+                return MiniCPMv45ChatHandler
             elif chat_handler_name == "Gemma3" and Gemma3ChatHandler is not None:
                 return Gemma3ChatHandler
             elif chat_handler_name == "Qwen2.5-VL" and Qwen25VLChatHandler is not None:
@@ -315,6 +360,8 @@ class LLAMA_CPP_STORAGE:
                 return GLM41VChatHandler
             elif chat_handler_name == "LFM2-VL" and LFM2VLChatHandler is not None:
                 return LFM2VLChatHandler
+            elif chat_handler_name == "LFM2.5-VL" and LFM25VLChatHandler is not None:
+                return LFM25VLChatHandler
             else:
                 print(f"【提示】未找到匹配的ChatHandler：{chat_handler_name}，使用默认处理")
                 return None
@@ -440,11 +487,22 @@ class LLAMA_CPP_STORAGE:
             enable_mmproj = config["enable_mmproj"]
             mmproj = config["mmproj"]
             chat_handler_name = config["chat_handler"]
+            device_mode = config.get("device_mode", "GPU")  # 默认使用 GPU 模式
             n_ctx = config["n_ctx"]
             n_gpu_layers = config["n_gpu_layers"]
             vram_limit = config["vram_limit"]
             image_min_tokens = config["image_min_tokens"]
             image_max_tokens = config["image_max_tokens"]
+            
+            # 根据设备模式调整参数
+            if device_mode == "CPU":
+                # CPU 模式：忽略 GPU 相关参数，强制使用纯 CPU
+                print(f"【设备模式】使用 CPU 模式（忽略 n_gpu_layers 和 vram_limit 参数）")
+                n_gpu_layers = 0
+                vram_limit = -1
+            else:
+                # GPU 模式：使用用户设置的参数
+                print(f"【设备模式】使用 GPU 模式（n_gpu_layers={n_gpu_layers}, vram_limit={vram_limit}GB）")
             
             # 构建模型路径
             model_path = os.path.join(folder_paths.models_dir, 'LLM', model)
@@ -494,9 +552,9 @@ class LLAMA_CPP_STORAGE:
             # 加载LLM模型前的智能检查
             print(f"【模型加载】开始加载LLM模型：{model}（上下文：{n_ctx}，GPU层数：{n_gpu_layers}）")
             
-            # 计算推荐的最大GPU层数
+            # 计算推荐的最大GPU层数（仅在 GPU 模式下）
             recommended_gpu_layers = n_gpu_layers
-            if HARDWARE_INFO["has_cuda"] and n_gpu_layers > 0:
+            if device_mode == "GPU" and HARDWARE_INFO["has_cuda"] and n_gpu_layers > 0:
                 # 根据显存大小计算推荐的GPU层数
                 gpu_vram = HARDWARE_INFO["gpu_vram_total"]
                 
@@ -523,6 +581,9 @@ class LLAMA_CPP_STORAGE:
                         print(f"【提示】您可以通过降低n_ctx、减少max_tokens或使用更小的模型来解决显存问题")
                 except Exception as e:
                     print(f"【提示】显存估算失败，使用默认设置：{e}")
+            elif device_mode == "CPU":
+                # CPU 模式：不需要显存估算
+                print(f"【提示】CPU 模式：跳过显存估算")
             
             # 构建模型参数
             llama_kwargs = {
@@ -530,10 +591,11 @@ class LLAMA_CPP_STORAGE:
                 "chat_handler": cls.chat_handler,
                 "n_gpu_layers": recommended_gpu_layers,
                 "n_ctx": n_ctx,
+                "n_batch": 2048,  # 从 512 增加到 2048，提升多模态图像处理速度
                 "verbose": False,
                 "n_threads": os.cpu_count() or 8,
                 "n_threads_batch": os.cpu_count() or 16,
-                "low_vram": HARDWARE_INFO["is_low_perf"],  # 低性能设备自动启用低显存模式
+                "low_vram": HARDWARE_INFO["is_low_perf"] if device_mode == "GPU" else True,  # CPU 模式强制启用低显存模式
                 "tensor_split": None,
             }
             

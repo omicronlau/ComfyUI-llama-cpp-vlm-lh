@@ -4,12 +4,12 @@ ComfyUI-llama-cpp-vlmforQo 节点包
 """
 
 # 导入所有节点
-from .llama_cpp_model_loader import llama_cpp_model_loader
-from .llama_cpp_instruct_adv import llama_cpp_instruct_adv
-from .llama_cpp_parameters import llama_cpp_parameters
-from .llama_cpp_clean_states import llama_cpp_clean_states
-from .llama_cpp_unload_model import llama_cpp_unload_model
-from .json_to_bbox import json_to_bbox
+from .nodes.llama_cpp_model_loader import llama_cpp_model_loader
+from .nodes.llama_cpp_instruct_adv import llama_cpp_instruct_adv
+from .nodes.llama_cpp_parameters import llama_cpp_parameters
+from .nodes.llama_cpp_clean_states import llama_cpp_clean_states
+from .nodes.llama_cpp_unload_model import llama_cpp_unload_model
+from .nodes.json_to_bbox import json_to_bbox
 
 # 节点映射关系，ComfyUI通过这个字典识别节点
 NODE_CLASS_MAPPINGS = {
