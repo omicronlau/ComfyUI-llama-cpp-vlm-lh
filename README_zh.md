@@ -99,8 +99,6 @@ ComfyUI-llama-cpp-vlmforQo是一个功能强大的ComfyUI插件，基于ComfyUI-
   - 推荐：llama-joycaption-beta-one-llava-mmproj-model-f16.gguf
 
 - **MobileVLM**: https://huggingface.co/Blombert/MobileVLM-3B-GGUF
-- **TinyLLaVA**: 
-- **MiniGPT-v2**:
 - **nanoLLaVA**: https://huggingface.co/saiphyohein/nanollava-1.5-gguf
 - **LFM2.5-VL-1.6B**: https://huggingface.co/unsloth/LFM2.5-VL-1.6B-GGUF
 - **Moondream2**: https://huggingface.co/Hahasb/moondream2-20250414-GGUF
@@ -139,6 +137,14 @@ ComfyUI-llama-cpp-vlmforQo是一个功能强大的ComfyUI插件，基于ComfyUI-
 2. **模型文件格式**：
    - 支持 `.gguf` 和 `.safetensors` 格式
    - 视觉模型需要对应的 `mmproj` 文件
+
+## 工作流示例
+
+[workflow](./workflow/llama-cpp-vlmforQo.json)
+
+![workflow](./workflow/TEXT.png)
+
+![workflow](./workflow/Images.png)
 
 ## 使用指南（根据自己电脑配置情况选择调整）
 
@@ -336,12 +342,12 @@ ComfyUI-llama-cpp-vlmforQo是一个功能强大的ComfyUI插件，基于ComfyUI-
 - **Qwen - Image Dual**：专为 Qwen Image 系列（包括 Qwen Image 和 Qwen Image 2512）模型设计，创建高质量的图像生成提示
 
 ### 视频模板
-- **Video - Reverse Prompt**：视频反推提示词，根据视频内容生成详细的视频描述提示词（600-1000字）
+- **Video - Reverse Prompt**：视频反推提示词，根据视频内容生成详细的视频描述提示词
 
 ### 电影风格模板
 - **WAN - T2V**：电影导演风格，为原始prompt添加电影元素（时间、光源、光线强度、光线角度、色调、拍摄角度、镜头大小、构图等）
-- **WAN - I2V**：视频描述提示词改写专家，根据图像和输入提示词改写视频描述，强调动态内容（120-150字）
-- **WAN - I2V Empty**：视频描述提示词撰写专家，根据图像发挥想象生成视频描述（120-150字）
+- **WAN - I2V**：视频描述提示词改写专家，根据图像和输入提示词改写视频描述，强调动态内容
+- **WAN - I2V Empty**：视频描述提示词撰写专家，根据图像发挥想象生成视频描述
 - **WAN - FLF2V**：Prompt优化师，根据视频首尾帧图片优化改写Prompt，强调运动信息和镜头运镜
 ## 致谢
 * [ComfyUI-llama-cpp_vlm](https://github.com/lihaoyun6/ComfyUI-llama-cpp_vlm) @lihaoyun6
