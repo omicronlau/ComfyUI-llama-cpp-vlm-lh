@@ -120,7 +120,50 @@ base_models = ["LLaVA-1.6", "nanoLLaVA", "llama-joycaption", "moondream3-preview
                "CogVLM-MOE", "Phi-3.5-vision-instruct", "Phi-3-vision-128k-instruct", 
                "Qwen2.5-VL", "Qwen3-VL", "Qwen3-VL-Chat", "Qwen3-VL-Instruct", 
                "LLaMA-3.1-Vision", "Zhipu-Vision", "智谱AI-Vision", "olmOCR-2", 
-               "InternVL-1.5", "InternVL-2.0", "Yi-VL-2.0"]
+               "InternVL-1.5", "InternVL-2.0", "Yi-VL-2.0", "Gemma-3", "Granite-DocLing", 
+               "Lfm-2-VL", "Llama3-Vision-Alpha", "LLaVA-1.5", "MiniCPM-V-2.6", "Obsidian", 
+               "Youtu-VL-4B-Instruct", "EraX-VL-7B-V1.5", "MiMo-VL-7B-RL", "Yi-VL-6B"]
+
+# ChatHandler名称到标准模型名称的映射
+CHAT_HANDLER_MODEL_MAP = {
+    'qwen25vl': 'Qwen2.5-VL',
+    'qwen3vl': 'Qwen3-VL',
+    'qwen3vlchat': 'Qwen3-VL-Chat',
+    'qwen3vlinstruct': 'Qwen3-VL-Instruct',
+    'glm46v': 'GLM-4.6V',
+    'minicpmv45': 'MiniCPM-V-4.5',
+    'minicpmlama3v25': 'MiniCPM-Llama3-V 2.5',
+    'moondream3': 'moondream3-preview',
+    'moondream2': 'Moondream2',
+    'internlmxcomposer2vl': 'InternLM-XComposer2-VL',
+    'dreamomni2': 'DreamOmni2',
+    'llama32visioninstruct': 'Llama-3.2-11B-Vision-Instruct',
+    'cogvlm2': 'CogVLM2',
+    'cogvlmmoe': 'CogVLM-MOE',
+    'phi35vision': 'Phi-3.5-vision-instruct',
+    'phi3vision128k': 'Phi-3-vision-128k-instruct',
+    'llama31vision': 'LLaMA-3.1-Vision',
+    'zhipuvision': 'Zhipu-Vision',
+    'zhipu-aivision': '智谱AI-Vision',
+    'olmocr2': 'olmOCR-2',
+    'internvl15': 'InternVL-1.5',
+    'internvl20': 'InternVL-2.0',
+    'yivl20': 'Yi-VL-2.0',
+    'gemma3': 'Gemma-3',
+    'granitedocling': 'Granite-DocLing',
+    'lfmv2': 'Lfm-2-VL',
+    'llama3visionalpha': 'Llama3-Vision-Alpha',
+    'llava15': 'LLaVA-1.5',
+    'llava16': 'LLaVA-1.6',
+    'minicpmv26': 'MiniCPM-V-2.6',
+    'minicpmv45': 'MiniCPM-V-4.5',
+    'obsidian': 'Obsidian',
+    'yutu-vl-4b-instruct': 'Youtu-VL-4B-Instruct',
+    'erax-vl-7b-v1.5': 'EraX-VL-7B-V1.5',
+    'mimo-vl-7b-rl': 'MiMo-VL-7B-RL',
+    'yi-vl-6b': 'Yi-VL-6B',
+    'lightonocr-2-1b': 'olmOCR-2'
+}
 
 # 动态检测llama_cpp_python中的ChatHandler和模型支持
 def detect_available_chat_handlers():
@@ -151,46 +194,9 @@ def detect_available_chat_handlers():
                 # 转换为小写，然后处理特殊情况
                 model_name = model_name.lower()
                 
-                # 特殊处理常见模型名称
-                special_cases = {
-                    'qwen25vl': 'Qwen2.5-VL',
-                    'qwen3vl': 'Qwen3-VL',
-                    'qwen3vlchat': 'Qwen3-VL-Chat',
-                    'qwen3vlinstruct': 'Qwen3-VL-Instruct',
-                    'glm46v': 'GLM-4.6V',
-                    'minicpmv45': 'MiniCPM-V-4.5',
-                    'minicpmlama3v25': 'MiniCPM-Llama3-V 2.5',
-                    'moondream3': 'moondream3-preview',
-                    'moondream2': 'Moondream2',
-                    'internlmxcomposer2vl': 'InternLM-XComposer2-VL',
-                    'dreamomni2': 'DreamOmni2',
-                    'llama32visioninstruct': 'Llama-3.2-11B-Vision-Instruct',
-                    'cogvlm2': 'CogVLM2',
-                    'cogvlmmoe': 'CogVLM-MOE',
-                    'phi35vision': 'Phi-3.5-vision-instruct',
-                    'phi3vision128k': 'Phi-3-vision-128k-instruct',
-                    'llama31vision': 'LLaMA-3.1-Vision',
-                    'zhipuvision': 'Zhipu-Vision',
-                    'zhupuvision': 'Zhipu-Vision',
-                    'zhipu-aivision': '智谱AI-Vision',
-                    'olmocr2': 'olmOCR-2',
-                    'internvl15': 'InternVL-1.5',
-                    'internvl20': 'InternVL-2.0',
-                    'yivl20': 'Yi-VL-2.0',
-                    'gemma3': 'Gemma-3',
-                    'granitedocling': 'Granite-DocLing',
-                    'lfmv2': 'Lfm-2-VL',
-                    'llama3visionalpha': 'Llama3-Vision-Alpha',
-                    'llava15': 'LLaVA-1.5',
-                    'llava16': 'LLaVA-1.6',
-                    'minicpmv26': 'MiniCPM-V-2.6',
-                    'minicpmv45': 'MiniCPM-V-4.5',
-                    'obsidian': 'Obsidian'
-                }
-                
                 # 应用特殊处理
-                if model_name in special_cases:
-                    detected_model = special_cases[model_name]
+                if model_name in CHAT_HANDLER_MODEL_MAP:
+                    detected_model = CHAT_HANDLER_MODEL_MAP[model_name]
                 else:
                     # 保持原始转换结果
                     detected_model = model_name.title().replace('-', ' ')
@@ -240,44 +246,8 @@ for handler_name in available_handlers:
     model_name = re.sub(r'([A-Z])([0-9])', r'\1-\2', model_name)
     model_name = model_name.lower()
     
-    special_cases = {
-        'qwen25vl': 'Qwen2.5-VL',
-        'qwen3vl': 'Qwen3-VL',
-        'qwen3vlchat': 'Qwen3-VL-Chat',
-        'qwen3vlinstruct': 'Qwen3-VL-Instruct',
-        'glm46v': 'GLM-4.6V',
-        'minicpmv45': 'MiniCPM-V-4.5',
-        'minicpmlama3v25': 'MiniCPM-Llama3-V 2.5',
-        'moondream3': 'moondream3-preview',
-        'moondream2': 'Moondream2',
-        'internlmxcomposer2vl': 'InternLM-XComposer2-VL',
-        'dreamomni2': 'DreamOmni2',
-        'llama32visioninstruct': 'Llama-3.2-11B-Vision-Instruct',
-        'cogvlm2': 'CogVLM2',
-        'cogvlmmoe': 'CogVLM-MOE',
-        'phi35vision': 'Phi-3.5-vision-instruct',
-        'phi3vision128k': 'Phi-3-vision-128k-instruct',
-        'llama31vision': 'LLaMA-3.1-Vision',
-        'zhipuvision': 'Zhipu-Vision',
-        'zhupuvision': 'Zhipu-Vision',
-        'zhipu-aivision': '智谱AI-Vision',
-        'olmocr2': 'olmOCR-2',
-        'internvl15': 'InternVL-1.5',
-        'internvl20': 'InternVL-2.0',
-        'yivl20': 'Yi-VL-2.0',
-        'gemma3': 'Gemma-3',
-        'granitedocling': 'Granite-DocLing',
-        'lfmv2': 'Lfm-2-VL',
-        'llama3visionalpha': 'Llama3-Vision-Alpha',
-        'llava15': 'LLaVA-1.5',
-        'llava16': 'LLaVA-1.6',
-        'minicpmv26': 'MiniCPM-V-2.6',
-        'minicpmv45': 'MiniCPM-V-4.5',
-        'obsidian': 'Obsidian'
-    }
-    
-    if model_name in special_cases:
-        detected_model = special_cases[model_name]
+    if model_name in CHAT_HANDLER_MODEL_MAP:
+        detected_model = CHAT_HANDLER_MODEL_MAP[model_name]
     else:
         detected_model = model_name.title().replace('-', ' ')
     
