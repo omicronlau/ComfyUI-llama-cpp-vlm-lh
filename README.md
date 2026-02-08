@@ -1,34 +1,35 @@
-# ComfyUI-llama-cpp-vlmforQo  
-Run LLM/VLM models natively in ComfyUI based on llama.cpp, supporting multimodal inference, visual language understanding, and various AI tasks.  
-**[[📃中文版](./README_zh.md)]**
+# ComfyUI-llama-cpp-vlmforQo
+
+Run LLM/VLM models natively in ComfyUI based on llama.cpp, supporting multimodal inference, visual language understanding, and various AI tasks.
+
+**[📃中文版](./README_zh.md)**
 
 ## Project Introduction
 
-ComfyUI-llama-cpp-vlmforQo is a powerful ComfyUI plugin that allows users to run various large language models (LLM) and vision language models (VLM) locally without relying on cloud services. Based on llama.cpp technology, this plugin provides efficient model inference capabilities, supporting a wide range of devices from high-end to low-end GPUs.
+ComfyUI-llama-cpp-vlmforQo is a comprehensive and performance-optimized ComfyUI plugin, deeply refactored and enhanced based on the ComfyUI-llama-cpp-vlm plugin, focusing on providing localized, efficient multimodal AI inference capabilities.
 
-### Project Goals
-- Enable local execution of advanced AI models without cloud dependency
-- Provide seamless integration of multimodal capabilities into ComfyUI workflows
-- Optimize performance across different hardware configurations
-- Support a wide variety of popular LLM and VLM models
-- Offer flexible parameter control for fine-tuning model behavior
+Compared to similar plugins, this project has achieved significant breakthroughs in the following aspects:
+- **More comprehensive multimodal support**: Not only supports text and images, but also adds video input and analysis capabilities
+- **Smarter hardware adaptation**: Based on llama.cpp technology, implements intelligent parameter tuning from high-end to low-end devices
+- **Rich model ecosystem**: Supports multiple mainstream VLM/LLM models, including the latest professional AI models, with dynamic support functionality—when llama_cpp_python updates and supports new model versions, users can directly download and use them without modifying plugin code
+- **Optimized inference performance**: Reconstructs model loading and inference processes, significantly improving operational efficiency
+- **Professional prompt system**: Built-in rich preset templates covering full-scenario needs from basic description to professional model optimization
 
-### Key Advantages
-- **Privacy-First**: All processing happens locally, no data sent to cloud servers
-- **Cost-Effective**: No API fees or subscription costs
-- **Versatile**: Supports both text-only and multimodal models
-- **Hardware-Aware**: Automatically optimizes settings based on available resources
-- **Extensible**: Easy to integrate with other ComfyUI nodes and workflows
+> Note: Incompatible with ComfyUI-llama-cpp-vlm and branch plugins
 
 ## Core Features
 
-- **Multimodal Support**: Process text, image, and video inputs
-- **Wide Model Compatibility**: Support for 20+ mainstream VLM/LLM models
-- **Intelligent Hardware Adaptation**: Automatically adjust parameters based on VRAM size
-- **Efficient Inference**: Optimized model loading and inference workflow
-- **Rich Preset Templates**: Built-in multiple prompt templates
-- **Flexible Parameter Control**: Detailed inference parameter settings
-- **Session Management**: Support for session state saving and cleaning
+- **Multimodal Full Support**: Process text, image, and video inputs, enabling cross-modal understanding and generation
+- **Wide Model Compatibility**: Support for multiple mainstream VLM/LLM models, including the latest professional AI models, with dynamic support functionality—when llama_cpp_python updates and supports new model versions, users can directly download and use them without modifying plugin code
+- **Intelligent Hardware Adaptation**: Automatically adjust parameters based on VRAM size to maximize hardware performance
+- **Efficient Inference Engine**: Optimized model loading and inference workflow, significantly improving operational speed
+- **Professional Prompt System**: Built-in rich preset templates covering full-scenario needs from basic description to professional model optimization
+- **Flexible Parameter Control**: Detailed inference parameter settings to meet customized needs for different scenarios
+
+- **Video Processing Capability**: Added video input support, enabling video content analysis and reverse generation
+- **CPU/GPU Mode**: Freely switch between runtime modes to adapt to different hardware configurations
+- **Hardware Detection Optimization**: Automatically detect hardware performance and recommend optimal parameter configurations
+
 
 ## Chinese Translation
 
@@ -36,42 +37,55 @@ Place the zh-CN files into the corresponding folder of the translation plugin (C
 
 ## Supported Models
 
-### Static Supported Models
-- "LLaVA-1.5", "LLaVA-1.6", "Moondream2", "nanoLLaVA"
-- "llama3-Vision-Alpha", "MiniCPM-v2.6", "MiniCPM-v4", "MiniCPM-V-4.5"
-- "LFM2.5-VL", "GLM-4.6V", "llama-joycaption"
+- LLaVA-1.6
+- nanoLLaVA
+- MiniCPM-V-4.5
+- GLM-4.6V
+- llama-joycaption
+- moondream3-preview
+- Moondream2
+- InternLM-XComposer2-VL
+- DreamOmni2
+- MiniCPM-Llama3-V 2.5
+- Llama-3.2-11B-Vision-Instruct
+- CogVLM2
+- CogVLM-MOE
+- Phi-3.5-vision-instruct
+- Phi-3-vision-128k-instruct
+- Qwen2.5-VL
+- Qwen3-VL
+- Qwen3-VL-Chat
+- Qwen3-VL-Instruct
+- LLaMA-3.1-Vision
+- Zhipu-Vision
+- ZhiPu AI-Vision
+- olmOCR-2
+- InternVL-1.5
+- InternVL-2.0
+- Yi-VL-2.0
 
-### Dynamically Imported Models (depending on llama-cpp-python version)
-- "Gemma3", "Qwen2.5-VL", "Qwen3-VL", "Qwen3-VL-Chat", "Qwen3-VL-Instruct"
-- "GLM-4.1V-Thinking", "LFM2-VL", "MobileVLM", "TinyLLaVA", "MiniGPT-v2"
+> Note: The plugin already supports multiple model loading, specific support depends on llama_cpp_python version
 
-- The plugin already supports LFM2.5-VL model loading, but llama_cpp_python is not yet compatible
 
-## Hardware Requirements
-
-### Recommended Configuration Based on VRAM Size
-
-#### 24GB+ VRAM (e.g., 5090, 4090, 3090)
-- **Recommended Models**: Any model, including the largest vision language models
-- **Performance**: Smoothly run all models, support maximum context length
-
-#### 16GB VRAM (e.g., 4080)
-- **Recommended Models**: LLaVA-1.6, MiniCPM-V-4.5, Qwen2.5-VL, LFM2.5-VL
-- **Performance**: Balance between performance and quality
-
-#### 12GB VRAM (e.g., 4070 Ti, 3080)
-- **Recommended Models**: LLaVA-1.5, MiniCPM-v2.6, Moondream2, LFM2.5-VL
-- **Performance**: Suitable for most tasks
-
-#### 8GB VRAM (e.g., 3070, 3060)
-- **Recommended Models**: Moondream2, nanoLLaVA, LFM2.5-VL-1.6B, MobileVLM, TinyLLaVA
-- **Performance**: Suitable for basic visual understanding tasks
-
-#### 4-6GB VRAM
-- **Recommended Models**: nanoLLaVA, TinyLLaVA, MiniGPT-v2
-- **Performance**: May require CPU-only operation, suitable for simple tasks
 
 ## Changelog
+#### 2026-02-05
+- Added multiple new preset prompt templates: Bilingual Prompt Generate, Ultra HD Image Reverse
+- Optimized model loading and inference workflow for improved efficiency
+- Enhanced Chinese localization support
+- Added video interface support, enabling video input and introducing new templates for video reverse functionality:
+  - Video Scene Breakdown Preset: Automatically generates scene-by-scene prompts based on video content
+  - Video Subtitle Preset: Automatically generates subtitle prompts based on video content
+- Added OCR enhancement functionality, supporting poster text recognition and style restoration, optimized for prompt reverse requirements:
+  - OCR Enhancement Prompt Template: Specifically designed for poster OCR text recognition, accurately extracting text content and style attributes
+  - Supports recognition of text font, size, color, typesetting style and other detailed attributes
+- Implemented intelligent model detection system that automatically discovers and supports new VL models added in llama_cpp_python
+- Optimized model name inference logic to automatically generate model names based on ChatHandler naming conventions
+- Expanded model support list to ensure backward compatibility with all previously supported models
+- Implemented model list deduplication functionality to keep the interface clean and organized
+- Added support for multiple models: moondream3-preview, InternLM-XComposer2-VL, DreamOmni2, MiniCPM-Llama3-V 2.5, Llama-3.2-11B-Vision-Instruct, Phi-3.5-vision-instruct, Moondream2, olmOCR-2, InternVL-1.5, InternVL-2.0, Yi-VL-2.0
+- Added dynamic support functionality, when llama_cpp_python updates and releases support for new model versions, users can directly download and use the models
+
 #### 2026-01-29
 - Restructured file directory, please delete old version files when installing, do not overwrite
 - Added comprehensive preset prompt templates for specialized AI models:
@@ -94,11 +108,9 @@ Place the zh-CN files into the corresponding folder of the translation plugin (C
   - Professional Model templates: ZIMAGE - Turbo, FLUX2 - Klein, LTX-2, Qwen - Image Layered, Qwen - Image Edit Combined, Qwen - Image Dual
   - Video templates: Video - Reverse Prompt
   - Cinematic Style templates: WAN - T2V, WAN - I2V, WAN - I2V Empty, WAN - FLF2V
-- Optimized Chinese-English switching function
-- Synchronized README and Parameter-Explanation-and-Recommended-Settings documentation with complete template descriptions
-- Provided bilingual preset templates for better compatibility with different language models (exclusive presets have word count limits to meet model generation needs while ensuring efficient results, if they cannot meet requirements, please input in the preset box or use external custom presets)
-- Added Chinese-English switching function for generated results (some presets like wan have forced Chinese output, which may cause conflicts)
-- Added localization files
+- Optimized Chinese-English switching function for better language adaptation
+- Provided bilingual preset templates (English and Chinese) for better compatibility with different language models (exclusive presets have word count limits to meet model generation needs while ensuring efficient results, if they cannot meet requirements, please input in the preset box or use external custom presets)
+- Added Chinese-English switching function for generated results
 
 #### 2026-01-24
 - Restructured node file directory
@@ -132,17 +144,32 @@ Place the zh-CN files into the corresponding folder of the translation plugin (C
 
 #### Reverse Models
 - **llama-joycaption**: https://huggingface.co/mradermacher/llama-joycaption-beta-one-hf-llava-GGUF
-  - Recommended: llama-joycaption-beta-one-hf-llava.Q4_K_M.gguf
 - **mmproj model**: https://huggingface.co/concedo/llama-joycaption-beta-one-hf-llava-mmproj-gguf
-  - Recommended: llama-joycaption-beta-one-llava-mmproj-model-f16.gguf
 
+#### Lightweight Models
 - **MobileVLM**: https://huggingface.co/Blombert/MobileVLM-3B-GGUF
 - **nanoLLaVA**: https://huggingface.co/saiphyohein/nanollava-1.5-gguf
-- **LFM2.5-VL-1.6B**: https://huggingface.co/unsloth/LFM2.5-VL-1.6B-GGUF
 - **Moondream2**: https://huggingface.co/Hahasb/moondream2-20250414-GGUF
+- **moondream3-preview**: https://huggingface.co/vikhyatk/moondream3
+
+#### Multimodal Models
 - **Qwen3-VL**: https://huggingface.co/mradermacher/Qwen3-VL-8B-Instruct-abliterated-v2.0-GGUF
-- **GLM-4.6V**: https://huggingface.co/unsloth/GLM-4.6V-Flash-GGUF
+- **Qwen2.5-VL**: https://huggingface.co/Qwen/Qwen2.5-VL-2B-Instruct-GGUF
+- **GLM-4.6V**: https://huggingface.co/huihui-ai/Huihui-GLM-4.6V-Flash-abliterated-GGUF
 - **MiniCPM-V-4.5**: https://huggingface.co/openbmb/MiniCPM-V-4_5-gguf
+- **MiniCPM-Llama3-V 2.5**: https://huggingface.co/openbmb/MiniCPM-Llama3-V-2_5
+- **Phi-3.5-vision-instruct**: https://huggingface.co/microsoft/Phi-3.5-vision-instruct
+- **Phi-3-vision-128k-instruct**: https://huggingface.co/microsoft/Phi-3-vision-128k-instruct
+- **Llama-3.2-11B-Vision-Instruct**: https://huggingface.co/meta-llama/Llama-3.2-11B-Vision-Instruct
+- **InternLM-XComposer2-VL**: https://huggingface.co/InternLM/InternLM-XComposer2-VL
+- **InternVL-1.5**: https://huggingface.co/OpenGVLab/InternVL-1.5
+- **InternVL-2.0**: https://huggingface.co/OpenGVLab/InternVL-2.0
+- **DreamOmni2**: https://huggingface.co/DreamOmni/DreamOmni2
+- **CogVLM2**: https://huggingface.co/THUDM/CogVLM2
+- **CogVLM-MOE**: https://huggingface.co/THUDM/CogVLM-MOE
+- **LLaMA-3.1-Vision**: https://huggingface.co/meta-llama/Llama-3.1-8B-Vision-Instruct
+- **Yi-VL-2.0**: https://huggingface.co/01-ai/Yi-VL-2.0
+- **olmOCR-2**: https://huggingface.co/allenai/olmOCR-2
 
 ### Quantization Level Selection
 
@@ -150,9 +177,6 @@ Place the zh-CN files into the corresponding folder of the translation plugin (C
 - **Q5_K_M**: Higher quality, slightly larger file
 - **Q3_K_M**: Smaller file, suitable for low VRAM devices
 - **Q2_K**: Smallest file, lower quality
-
-## Preview  
-![](./img/preview.jpg)
 
 ## Installation Instructions
 
@@ -180,11 +204,13 @@ Place the zh-CN files into the corresponding folder of the translation plugin (C
 
 ## Workflow Examples
 
-[workflow](./workflow/llama-cpp-vlmforQo.json)
+[Workflow File](./workflows/llama-cpp-vlmforQo.json)
 
-![workflow](./workflow/TEXT.png)
+![Workflow Example - Text Mode](./workflows/TEXT.png)
 
-![workflow](./workflow/Images.png)
+![Workflow Example - Image Mode](./workflows/Images.png)
+
+![Workflow Example - Video Mode](./workflows/Video.png)
 
 ## Usage Guide (Adjust according to your computer configuration)
 
@@ -360,10 +386,10 @@ The plugin includes various prompt templates for different scenarios:
 - **Normal - Describe**: Simply describe image content
 
 ### Prompt Style Templates
-- **Prompt Style - Tags**: Generate image tag lists, suitable for models like SDXL
-- **Prompt Style - Simple**: Concise image description (within 300 words)
-- **Prompt Style - Detailed**: Detailed image description (within 500 words)
-- **Prompt Style - Comprehensive Expansion**: Detailed prompt expansion, enhancing clarity and expressiveness (within 800 words)
+- **Prompt Style - Tags**: Generate image tag lists, suitable for models like SDXL, maximum output 50 unique tags
+- **Prompt Style - Simple**: Concise image description (within 300 words), enhancing clarity and expressiveness
+- **Prompt Style - Detailed**: Detailed image description (within 500 words), adding specific details for each element
+- **Prompt Style - Comprehensive Expansion**: Detailed prompt expansion (within 800 words), enhancing clarity and expressiveness
 - **Creative - Refine & Expand Prompt**: Optimize and expand prompts to make them more expressive and visually rich
 
 ### Creative Templates
@@ -372,18 +398,29 @@ The plugin includes various prompt templates for different scenarios:
 - **Creative - Short Story**: Generate short stories based on images or videos
 
 ### Vision Templates
-- **Vision - Bounding Box**: Generate object detection bounding boxes
+- **Vision - Bounding Box**: Generate object detection bounding boxes, output JSON format coordinate list
+
+### OCR Templates
+- **OCR - Enhanced**: Professional poster OCR text recognition, accurately extracting text content and style attributes, optimized for prompt reverse requirements
+
+### Multilingual Templates
+- **[Multilingual] Bilingual Prompt Generate**: Professional bilingual prompt generation expert, specializing in creating high-quality Chinese-English bilingual prompts for cross-border creation and bilingual document scenarios, ensuring both languages convey the same visual information and creative intent
+
+### High Resolution Templates
+- **[HighRes] Ultra HD Image Reverse**: Professional ultra HD image prompt reverse expert, specializing in extracting detailed visual information from 4K/8K ultra HD images and generating accurate prompts, including all details such as subjects, scenes, materials, textures, lighting, colors, and composition
+
+### Video Templates
+- **Video - Reverse Prompt**: Video reverse prompt, generating detailed video description prompts based on video content
+- **Video - Detailed Scene Breakdown**: Detailed video scene breakdown, providing complete details for each scene in chronological order
+- **Video - Subtitle Format**: Generate standard format video subtitles, including time codes and synchronized text
 
 ### Professional Model Templates
 - **ZIMAGE - Turbo**: Designed for Z-Image-Turbo model, creating efficient and high-quality image generation prompts, using 8-step Turbo inference for rapid 1080P HD image generation
 - **FLUX2 - Klein**: Designed for FLUX series (Flux.1 and FLUX.2 Klein) models, creating concise and expressive prompts
 - **LTX-2**: Designed for LTX-2 model, creating detailed and dynamic video generation prompts, supporting high-quality, audio-visual synchronized 4K video
 - **Qwen - Image Layered**: Designed for Qwen-Image-Layered model, creating detailed layered prompts for complex compositions
-- **Qwen - Image Edit Combined**: Comprehensive editing prompt enhancer for image editing tasks
+- **Qwen - Image Edit Combined**: Comprehensive editing prompt enhancer for image editing tasks, supporting add, delete, replace and other operations
 - **Qwen - Image Dual**: Designed for Qwen Image series (including Qwen Image and Qwen Image 2512) models, creating high-quality image generation prompts
-
-### Video Templates
-- **Video - Reverse Prompt**: Video reverse prompt, generating detailed video description prompts based on video content
 
 ### Cinematic Style Templates
 - **WAN - T2V**: Cinematic director style, adding cinematic elements (time, light source, light intensity, light angle, color tone, shooting angle, lens size, composition, etc.) to original prompts

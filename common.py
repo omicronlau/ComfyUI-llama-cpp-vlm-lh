@@ -112,84 +112,203 @@ def set_high_priority():
 set_high_priority()
 
 # -------------------------- 初始化ChatHandler（支持所有模型） --------------------------
-chat_handlers = ["None", "LLaVA-1.5", "LLaVA-1.6", "Moondream2", "nanoLLaVA", 
-                 "llama3-Vision-Alpha", "MiniCPM-v2.6", "MiniCPM-v4", "MiniCPM-V-4.5", 
-                 "LFM2.5-VL", "GLM-4.6V", "llama-joycaption"]
 
-# 动态导入各类ChatHandler
-Gemma3ChatHandler = None
-try:
-    from llama_cpp.llama_chat_format import Gemma3ChatHandler
-    chat_handlers += ["Gemma3"]
-    print(f"【模型支持】成功兼容Gemma3模型")
-except ImportError:
-    print(f"【模型支持】Gemma3模型暂不兼容（忽略，不影响其他功能）")
+# 基础模型列表（无需ChatHandler的模型）
+base_models = ["LLaVA-1.6", "nanoLLaVA", "llama-joycaption", "moondream3-preview", "Moondream2", 
+               "MiniCPM-V-4.5", "GLM-4.6V", "InternLM-XComposer2-VL", "DreamOmni2", 
+               "MiniCPM-Llama3-V 2.5", "Llama-3.2-11B-Vision-Instruct", "CogVLM2", 
+               "CogVLM-MOE", "Phi-3.5-vision-instruct", "Phi-3-vision-128k-instruct", 
+               "Qwen2.5-VL", "Qwen3-VL", "Qwen3-VL-Chat", "Qwen3-VL-Instruct", 
+               "LLaMA-3.1-Vision", "Zhipu-Vision", "智谱AI-Vision", "olmOCR-2", 
+               "InternVL-1.5", "InternVL-2.0", "Yi-VL-2.0"]
 
-Qwen25VLChatHandler = None
-try:
-    from llama_cpp.llama_chat_format import Qwen25VLChatHandler
-    chat_handlers += ["Qwen2.5-VL"]
-    print(f"【模型支持】成功兼容Qwen2.5-VL模型")
-except ImportError:
-    print(f"【模型支持】Qwen2.5-VL模型暂不兼容（忽略，不影响其他功能）")
-
-Qwen3VLChatHandler = None
-try:
-    from llama_cpp.llama_chat_format import Qwen3VLChatHandler
-    chat_handlers += ["Qwen3-VL", "Qwen3-VL-Chat", "Qwen3-VL-Instruct"]
-    print(f"【模型支持】成功兼容Qwen3-VL模型")
-except ImportError as e:
-    print(f"【模型支持】Qwen3-VL模型导入失败：{type(e).__name__}: {e}")
-    import traceback
-    traceback.print_exc()
-    # 尝试查看llama_cpp.llama_chat_format模块中可用的ChatHandler
+# 动态检测llama_cpp_python中的ChatHandler和模型支持
+def detect_available_chat_handlers():
+    """自动检测llama_cpp.llama_chat_format中可用的ChatHandler"""
+    available_handlers = []
+    detected_models = []
+    
     try:
         import llama_cpp.llama_chat_format
-        available_handlers = [attr for attr in dir(llama_cpp.llama_chat_format) if attr.endswith('ChatHandler')]
-        print(f"【调试】llama_cpp.llama_chat_format中可用的ChatHandler：{available_handlers}")
-    except Exception as e2:
-        print(f"【调试】查看可用ChatHandler失败：{e2}")
+        
+        # 扫描所有以ChatHandler结尾的类
+        for attr_name in dir(llama_cpp.llama_chat_format):
+            if attr_name.endswith('ChatHandler'):
+                available_handlers.append(attr_name)
+                
+                # 根据命名规则推断模型名称
+                # 示例：Qwen3VLChatHandler -> Qwen3-VL
+                # 示例：Llama32VisionInstructChatHandler -> Llama-3.2-Vision-Instruct
+                model_name = attr_name.replace('ChatHandler', '')
+                
+                # 处理命名规则
+                import re
+                # 添加连字符
+                model_name = re.sub(r'([a-z])([A-Z])', r'\1-\2', model_name)
+                model_name = re.sub(r'([0-9])([A-Z])', r'\1-\2', model_name)
+                model_name = re.sub(r'([A-Z])([0-9])', r'\1-\2', model_name)
+                
+                # 转换为小写，然后处理特殊情况
+                model_name = model_name.lower()
+                
+                # 特殊处理常见模型名称
+                special_cases = {
+                    'qwen25vl': 'Qwen2.5-VL',
+                    'qwen3vl': 'Qwen3-VL',
+                    'qwen3vlchat': 'Qwen3-VL-Chat',
+                    'qwen3vlinstruct': 'Qwen3-VL-Instruct',
+                    'glm46v': 'GLM-4.6V',
+                    'minicpmv45': 'MiniCPM-V-4.5',
+                    'minicpmlama3v25': 'MiniCPM-Llama3-V 2.5',
+                    'moondream3': 'moondream3-preview',
+                    'moondream2': 'Moondream2',
+                    'internlmxcomposer2vl': 'InternLM-XComposer2-VL',
+                    'dreamomni2': 'DreamOmni2',
+                    'llama32visioninstruct': 'Llama-3.2-11B-Vision-Instruct',
+                    'cogvlm2': 'CogVLM2',
+                    'cogvlmmoe': 'CogVLM-MOE',
+                    'phi35vision': 'Phi-3.5-vision-instruct',
+                    'phi3vision128k': 'Phi-3-vision-128k-instruct',
+                    'llama31vision': 'LLaMA-3.1-Vision',
+                    'zhipuvision': 'Zhipu-Vision',
+                    'zhupuvision': 'Zhipu-Vision',
+                    'zhipu-aivision': '智谱AI-Vision',
+                    'olmocr2': 'olmOCR-2',
+                    'internvl15': 'InternVL-1.5',
+                    'internvl20': 'InternVL-2.0',
+                    'yivl20': 'Yi-VL-2.0',
+                    'gemma3': 'Gemma-3',
+                    'granitedocling': 'Granite-DocLing',
+                    'lfmv2': 'Lfm-2-VL',
+                    'llama3visionalpha': 'Llama3-Vision-Alpha',
+                    'llava15': 'LLaVA-1.5',
+                    'llava16': 'LLaVA-1.6',
+                    'minicpmv26': 'MiniCPM-V-2.6',
+                    'minicpmv45': 'MiniCPM-V-4.5',
+                    'obsidian': 'Obsidian'
+                }
+                
+                # 应用特殊处理
+                if model_name in special_cases:
+                    detected_model = special_cases[model_name]
+                else:
+                    # 保持原始转换结果
+                    detected_model = model_name.title().replace('-', ' ')
+                
+                detected_models.append(detected_model)
+        
+        print(f"【模型检测】发现{len(available_handlers)}个可用的ChatHandler")
+        print(f"【模型检测】推断出{len(detected_models)}个模型")
+        
+    except ImportError as e:
+        print(f"【模型检测】无法导入llama_cpp.llama_chat_format：{e}")
+    except Exception as e:
+        print(f"【模型检测】检测过程出错：{e}")
+    
+    return available_handlers, detected_models
 
-GLM46VChatHandler = None
-try:
-    from llama_cpp.llama_chat_format import GLM46VChatHandler
-    chat_handlers += ["GLM-4.6V"]
-    print(f"【模型支持】成功兼容GLM-4.6V模型")
-except ImportError:
-    print(f"【模型支持】GLM-4.6V模型暂不兼容（忽略，不影响其他功能）")
+# 执行模型检测
+available_handlers, detected_models = detect_available_chat_handlers()
 
-GLM41VChatHandler = None
-try:
-    from llama_cpp.llama_chat_format import GLM41VChatHandler
-    chat_handlers += ["GLM-4.1V-Thinking"]
-    print(f"【模型支持】成功兼容GLM-4.1V-Thinking模型")
-except ImportError:
-    print(f"【模型支持】GLM-4.1V-Thinking模型暂不兼容（忽略，不影响其他功能）")
+# 生成chat_handlers列表
+chat_handlers = ["None"] + base_models + detected_models
 
-LFM2VLChatHandler = None
-try:
-    from llama_cpp.llama_chat_format import LFM2VLChatHandler
-    chat_handlers += ["LFM2-VL"]
-    print(f"【模型支持】成功兼容LFM2-VL模型")
-except ImportError:
-    print(f"【模型支持】LFM2-VL模型暂不兼容（忽略，不影响其他功能）")
+# 去重，保持顺序
+seen = set()
+chat_handlers = [x for x in chat_handlers if not (x in seen or seen.add(x))]
 
-# 添加对MiniCPM-V-4.5的支持
-MiniCPMv45ChatHandler = None
-try:
-    from llama_cpp.llama_chat_format import MiniCPMv45ChatHandler
-    chat_handlers += ["MiniCPM-V-4.5"]
-    print(f"【模型支持】成功兼容MiniCPM-V-4.5模型")
-except ImportError:
-    print(f"【模型支持】MiniCPM-V-4.5模型暂不兼容（忽略，不影响其他功能）")
+# 确保所有检测到的模型都在chat_handlers列表中
+for model in detected_models:
+    if model not in chat_handlers:
+        chat_handlers.append(model)
 
-# 添加对LFM2.5-VL的支持
-LFM25VLChatHandler = None
-try:
-    from llama_cpp.llama_chat_format import LFM25VLChatHandler
-    print(f"【模型支持】成功兼容LFM2.5-VL模型")
-except ImportError:
-    print(f"【模型支持】LFM2.5-VL模型暂不兼容（忽略，不影响其他功能）")
+# 再次去重，确保没有重复
+seen = set()
+chat_handlers = [x for x in chat_handlers if not (x in seen or seen.add(x))]
+
+print(f"【模型列表】最终生成了{len(chat_handlers)}个模型选项")
+print(f"【模型列表】前10个模型：{chat_handlers[:10]}")
+
+# 动态构建模型信息
+all_models = []
+for handler_name in available_handlers:
+    # 推断模型名称
+    model_name = handler_name.replace('ChatHandler', '')
+    import re
+    model_name = re.sub(r'([a-z])([A-Z])', r'\1-\2', model_name)
+    model_name = re.sub(r'([0-9])([A-Z])', r'\1-\2', model_name)
+    model_name = re.sub(r'([A-Z])([0-9])', r'\1-\2', model_name)
+    model_name = model_name.lower()
+    
+    special_cases = {
+        'qwen25vl': 'Qwen2.5-VL',
+        'qwen3vl': 'Qwen3-VL',
+        'qwen3vlchat': 'Qwen3-VL-Chat',
+        'qwen3vlinstruct': 'Qwen3-VL-Instruct',
+        'glm46v': 'GLM-4.6V',
+        'minicpmv45': 'MiniCPM-V-4.5',
+        'minicpmlama3v25': 'MiniCPM-Llama3-V 2.5',
+        'moondream3': 'moondream3-preview',
+        'moondream2': 'Moondream2',
+        'internlmxcomposer2vl': 'InternLM-XComposer2-VL',
+        'dreamomni2': 'DreamOmni2',
+        'llama32visioninstruct': 'Llama-3.2-11B-Vision-Instruct',
+        'cogvlm2': 'CogVLM2',
+        'cogvlmmoe': 'CogVLM-MOE',
+        'phi35vision': 'Phi-3.5-vision-instruct',
+        'phi3vision128k': 'Phi-3-vision-128k-instruct',
+        'llama31vision': 'LLaMA-3.1-Vision',
+        'zhipuvision': 'Zhipu-Vision',
+        'zhupuvision': 'Zhipu-Vision',
+        'zhipu-aivision': '智谱AI-Vision',
+        'olmocr2': 'olmOCR-2',
+        'internvl15': 'InternVL-1.5',
+        'internvl20': 'InternVL-2.0',
+        'yivl20': 'Yi-VL-2.0',
+        'gemma3': 'Gemma-3',
+        'granitedocling': 'Granite-DocLing',
+        'lfmv2': 'Lfm-2-VL',
+        'llama3visionalpha': 'Llama3-Vision-Alpha',
+        'llava15': 'LLaVA-1.5',
+        'llava16': 'LLaVA-1.6',
+        'minicpmv26': 'MiniCPM-V-2.6',
+        'minicpmv45': 'MiniCPM-V-4.5',
+        'obsidian': 'Obsidian'
+    }
+    
+    if model_name in special_cases:
+        detected_model = special_cases[model_name]
+    else:
+        detected_model = model_name.title().replace('-', ' ')
+    
+    # 检查是否是Qwen模型
+    is_qwen = 'qwen' in model_name.lower()
+    
+    all_models.append({
+        "handler": handler_name,
+        "models": [detected_model],
+        "is_qwen": is_qwen
+    })
+
+# 初始化所有ChatHandler为None
+for model_info in all_models:
+    globals()[model_info["handler"]] = None
+
+# 动态导入所有ChatHandler
+for model_info in all_models:
+    handler_name = model_info["handler"]
+    models = model_info["models"]
+    is_qwen = model_info["is_qwen"]
+    
+    try:
+        # 动态导入ChatHandler
+        exec(f"from llama_cpp.llama_chat_format import {handler_name}")
+        print(f"【模型支持】成功兼容{models[0]}模型")
+    except ImportError as e:
+        # 统一的错误处理方式
+        print(f"【模型支持】{models[0]}模型暂不兼容（忽略，不影响其他功能）")
+        print(f"【详细信息】{type(e).__name__}: {e}")
+
 
 # -------------------------- 通用工具类 --------------------------
 class AnyType(str):
@@ -334,22 +453,12 @@ class LLAMA_CPP_STORAGE:
         try:
             if chat_handler_name == "None":
                 return None
-            elif chat_handler_name == "LLaVA-1.5":
-                return Llava15ChatHandler
             elif chat_handler_name == "LLaVA-1.6":
                 return Llava16ChatHandler
-            elif chat_handler_name == "Moondream2":
-                return MoondreamChatHandler
             elif chat_handler_name == "nanoLLaVA":
                 return NanoLlavaChatHandler
-            elif chat_handler_name == "llama3-Vision-Alpha":
-                return Llama3VisionAlphaChatHandler
-            elif chat_handler_name == "MiniCPM-v2.6":
-                return MiniCPMv26ChatHandler
             elif chat_handler_name == "MiniCPM-V-4.5" and MiniCPMv45ChatHandler is not None:
                 return MiniCPMv45ChatHandler
-            elif chat_handler_name == "Gemma3" and Gemma3ChatHandler is not None:
-                return Gemma3ChatHandler
             elif chat_handler_name == "Qwen2.5-VL" and Qwen25VLChatHandler is not None:
                 return Qwen25VLChatHandler
             elif "Qwen3-VL" in chat_handler_name and Qwen3VLChatHandler is not None:
@@ -358,10 +467,70 @@ class LLAMA_CPP_STORAGE:
                 return GLM46VChatHandler
             elif chat_handler_name == "GLM-4.1V-Thinking" and GLM41VChatHandler is not None:
                 return GLM41VChatHandler
-            elif chat_handler_name == "LFM2-VL" and LFM2VLChatHandler is not None:
-                return LFM2VLChatHandler
-            elif chat_handler_name == "LFM2.5-VL" and LFM25VLChatHandler is not None:
-                return LFM25VLChatHandler
+            elif chat_handler_name == "moondream3-preview":
+                if Moondream3ChatHandler is not None:
+                    return Moondream3ChatHandler
+                return MoondreamChatHandler
+            elif chat_handler_name == "Moondream2":
+                if Moondream2ChatHandler is not None:
+                    return Moondream2ChatHandler
+                return MoondreamChatHandler
+            elif chat_handler_name == "InternLM-XComposer2-VL":
+                if InternLMXComposer2VLChatHandler is not None:
+                    return InternLMXComposer2VLChatHandler
+                return Llava16ChatHandler
+            elif chat_handler_name == "DreamOmni2":
+                if DreamOmni2ChatHandler is not None:
+                    return DreamOmni2ChatHandler
+                return Llava16ChatHandler
+            elif chat_handler_name == "MiniCPM-Llama3-V 2.5":
+                if MiniCPMLlama3V25ChatHandler is not None:
+                    return MiniCPMLlama3V25ChatHandler
+                return MiniCPMv26ChatHandler
+            elif chat_handler_name == "Llama-3.2-11B-Vision-Instruct":
+                if Llama32VisionInstructChatHandler is not None:
+                    return Llama32VisionInstructChatHandler
+                return Llama3VisionAlphaChatHandler
+            elif chat_handler_name == "CogVLM2":
+                if CogVLM2ChatHandler is not None:
+                    return CogVLM2ChatHandler
+                return Llava16ChatHandler
+            elif chat_handler_name == "CogVLM-MOE":
+                if CogVLMMOEChatHandler is not None:
+                    return CogVLMMOEChatHandler
+                return Llava16ChatHandler
+            elif chat_handler_name == "Phi-3.5-vision-instruct":
+                if Phi35VisionChatHandler is not None:
+                    return Phi35VisionChatHandler
+                return Llava16ChatHandler
+            elif chat_handler_name == "Phi-3-vision-128k-instruct":
+                if Phi3Vision128kChatHandler is not None:
+                    return Phi3Vision128kChatHandler
+                return Llava16ChatHandler
+            elif chat_handler_name == "LLaMA-3.1-Vision":
+                if Llama31VisionChatHandler is not None:
+                    return Llama31VisionChatHandler
+                return Llama3VisionAlphaChatHandler
+            elif chat_handler_name == "Zhipu-Vision" or chat_handler_name == "智谱AI-Vision":
+                if ZhipuVisionChatHandler is not None:
+                    return ZhipuVisionChatHandler
+                return Llava16ChatHandler
+            elif chat_handler_name == "olmOCR-2":
+                if OlmOCR2ChatHandler is not None:
+                    return OlmOCR2ChatHandler
+                return Llava16ChatHandler
+            elif chat_handler_name == "InternVL-1.5":
+                if InternVL15ChatHandler is not None:
+                    return InternVL15ChatHandler
+                return Llava16ChatHandler
+            elif chat_handler_name == "InternVL-2.0":
+                if InternVL20ChatHandler is not None:
+                    return InternVL20ChatHandler
+                return Llava16ChatHandler
+            elif chat_handler_name == "Yi-VL-2.0":
+                if YiVL20ChatHandler is not None:
+                    return YiVL20ChatHandler
+                return Llava16ChatHandler
             else:
                 print(f"【提示】未找到匹配的ChatHandler：{chat_handler_name}，使用默认处理")
                 return None
@@ -601,7 +770,60 @@ class LLAMA_CPP_STORAGE:
             
             # 尝试加载模型，失败时提供降级策略
             try:
-                cls.llm = Llama(**llama_kwargs)
+                # 暂时重定向标准输出，每加载50个参数显示一条摘要
+                import sys
+                original_stdout = sys.stdout
+                original_stderr = sys.stderr
+                
+                # 创建一个自定义输出流，用于捕获和处理加载信息
+                class LoadingOutput:
+                    def __init__(self):
+                        self.buffer = []
+                        self.param_count = 0
+                        self.last_percent = -1
+                    
+                    def write(self, text):
+                        # 捕获所有输出
+                        self.buffer.append(text)
+                        
+                        # 尝试提取参数加载信息
+                        if "Loading weights:" in text:
+                            try:
+                                # 提取百分比和参数计数
+                                if "|" in text:
+                                    parts = text.split("|")
+                                    # 查找包含参数计数的部分，如 "1/258"
+                                    for part in parts:
+                                        if "/" in part:
+                                            count_str = part.strip()
+                                            if count_str and count_str[0].isdigit():
+                                                current = int(count_str.split("/")[0])
+                                                total = int(count_str.split("/")[1])
+                                                
+                                                # 每50个参数或百分比变化时显示一条日志
+                                                if current % 50 == 0 or (current > 0 and current % 10 == 0 and current < 100):
+                                                    percent = int((current / total) * 100)
+                                                    if percent != self.last_percent:
+                                                        print(f"【模型加载】进度：{percent}%，参数：{current}/{total}")
+                                                        self.last_percent = percent
+                                    
+                            except Exception:
+                                pass
+                    
+                    def flush(self):
+                        pass
+                
+                loading_output = LoadingOutput()
+                sys.stdout = loading_output
+                sys.stderr = loading_output
+                
+                try:
+                    cls.llm = Llama(**llama_kwargs)
+                finally:
+                    # 恢复标准输出
+                    sys.stdout = original_stdout
+                    sys.stderr = original_stderr
+                
                 print(f"【模型加载】LLM模型加载成功！（格式：{model_ext}）")
             except Exception as e:
                 error_msg = str(e)
@@ -622,7 +844,60 @@ class LLAMA_CPP_STORAGE:
                     llama_kwargs["low_vram"] = True
                     
                     try:
-                        cls.llm = Llama(**llama_kwargs)
+                        # 再次重定向标准输出，使用相同的加载输出处理
+                        import sys
+                        original_stdout = sys.stdout
+                        original_stderr = sys.stderr
+                        
+                        # 创建一个自定义输出流，用于捕获和处理加载信息
+                        class LoadingOutput:
+                            def __init__(self):
+                                self.buffer = []
+                                self.param_count = 0
+                                self.last_percent = -1
+                            
+                            def write(self, text):
+                                # 捕获所有输出
+                                self.buffer.append(text)
+                                
+                                # 尝试提取参数加载信息
+                                if "Loading weights:" in text:
+                                    try:
+                                        # 提取百分比和参数计数
+                                        if "|" in text:
+                                            parts = text.split("|")
+                                            # 查找包含参数计数的部分，如 "1/258"
+                                            for part in parts:
+                                                if "/" in part:
+                                                    count_str = part.strip()
+                                                    if count_str and count_str[0].isdigit():
+                                                        current = int(count_str.split("/")[0])
+                                                        total = int(count_str.split("/")[1])
+                                                        
+                                                        # 每50个参数或百分比变化时显示一条日志
+                                                        if current % 50 == 0 or (current > 0 and current % 10 == 0 and current < 100):
+                                                            percent = int((current / total) * 100)
+                                                            if percent != self.last_percent:
+                                                                print(f"【模型加载】(CPU模式) 进度：{percent}%，参数：{current}/{total}")
+                                                                self.last_percent = percent
+                                    
+                                    except Exception:
+                                        pass
+                            
+                            def flush(self):
+                                pass
+                        
+                        loading_output = LoadingOutput()
+                        sys.stdout = loading_output
+                        sys.stderr = loading_output
+                        
+                        try:
+                            cls.llm = Llama(**llama_kwargs)
+                        finally:
+                            # 恢复标准输出
+                            sys.stdout = original_stdout
+                            sys.stderr = original_stderr
+                        
                         print(f"【模型加载】LLM模型已使用纯CPU模式加载成功！")
                         print(f"【提示】CPU模式推理速度会较慢，建议使用更小的模型以提高速度")
                     except Exception as fallback_e:

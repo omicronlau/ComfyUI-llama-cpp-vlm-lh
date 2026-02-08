@@ -1,48 +1,65 @@
 # ComfyUI-llama-cpp-vlmforQo
 
-在ComfyUI中基于llama.cpp原生运行LLM/VLM模型，支持多模态推理、视觉语言理解和各种AI任务。  
-**\[**[**📃English**](./README.md)**]**
+在ComfyUI中基于llama.cpp原生运行LLM/VLM模型，支持多模态推理、视觉语言理解和各种AI任务。
+
+**[📃English](./README.md)**
 
 ## 项目简介
 
-ComfyUI-llama-cpp-vlmforQo是一个功能强大的ComfyUI插件，基于ComfyUI-llama-cpp-vlm插件进行的功能新增与性能优化，允许用户在本地运行各种大型语言模型(LLM)和视觉语言模型(VLM)，无需依赖云服务。该插件基于llama.cpp技术，提供高效的模型推理能力，支持从高端到低端显卡的广泛设备。【与ComfyUI-llama-cpp-vlm等分支插件不兼容，如果节点无法正常使用，请重新将节点添加到工作流中】
+ComfyUI-llama-cpp-vlmforQo是一款功能全面、性能优化的ComfyUI插件，基于ComfyUI-llama-cpp-vlm插件进行深度重构与增强，专注于提供本地化、高效的多模态AI推理能力，目前以支持40余种模型，插件提供了丰富的参数调整选项，用户可以根据自己的需求选择不同的模型和参数配置，以实现最佳的推理效果。
+
+相较于同类插件，本项目在以下方面实现了显著突破：
+- **更全面的多模态支持**：不仅支持文本和图片，还新增视频输入与分析能力
+- **更智能的硬件适配**：基于llama.cpp技术，实现从高端到低端设备的智能参数调优
+- **更丰富的模型生态**：支持多种主流VLM/LLM模型，包括最新发布的专业AI模型，并实现动态支持功能
+- **更优化的推理性能**：重构模型加载与推理流程，显著提升运行效率
+- **更专业的提示词系统**：内置丰富的预设模板，覆盖从基础描述到专业模型优化的全场景需求
+
+> 注：与ComfyUI-llama-cpp-vlm及分支插件不兼容（部分版本更新会修改文件结构目录，安装旧版插件的建议删除后再安装新版插件，请勿覆盖或安装多个相同的插件，以免发生运行错误）
 
 ## 核心功能
 
-- **多模态支持**：处理文本、图片和视频输入
-- **广泛的模型兼容性**：支持20+种主流VLM/LLM模型
-- **智能硬件适配**：根据显存大小自动调整参数
-- **高效推理**：优化的模型加载和推理流程
-- **丰富的预设模板**：内置多种提示词模板
-- **灵活的参数控制**：详细的推理参数设置
-- **会话管理**：支持会话状态保存和清理
+- **多模态全支持**：处理文本、图片和视频输入，实现跨模态理解与生成
+- **广泛模型兼容**：支持多种主流VLM/LLM模型，包括最新发布的专业AI模型
+- **智能硬件适配**：根据显存大小自动调整参数，实现硬件性能最大化
+- **高效推理引擎**：优化的模型加载和推理流程，显著提升运行速度
+- **专业提示词模板**：内置多种场景化提示词模板，包括专业AI模型专属优化模板
+- **灵活参数控制**：详细的推理参数设置，满足不同场景的定制化需求
+- **视频处理能力**：新增视频输入支持，实现视频内容分析与反推
+- **CPU/GPU模式**：自由切换运行模式，适配不同硬件配置
+- **硬件检测优化**：自动检测硬件性能并推荐最佳参数配置
 
 ## 中文翻译
 将zh-CN文件放入翻译插件(ComfyUI-Chinese-Translation/AIGODLIKE-ComfyUI-Translation/ComfyUI-DD-Translation对)应的文件夹内覆盖即可,推荐安装ComfyUI-Chinese-Translation插件，汉化更全面，翻译更新速度更快更全。
 
-## 支持的模型
-
-### 静态支持的模型
-- "LLaVA-1.5", "LLaVA-1.6", "Moondream2", "nanoLLaVA"
-- "llama3-Vision-Alpha", "MiniCPM-v2.6", "MiniCPM-v4", "MiniCPM-V-4.5"
-- "LFM2.5-VL", "GLM-4.6V", "llama-joycaption"
-
-### 动态导入的模型（根据llama-cpp-python版本）
-- "Gemma3", "Qwen2.5-VL", "Qwen3-VL", "Qwen3-VL-Chat", "Qwen3-VL-Instruct"
-- "GLM-4.1V-Thinking", "LFM2-VL", "MobileVLM", "TinyLLaVA", "MiniGPT-v2"
-
-- 插件已支持 LFM2.5-VL模型加载，llama_cpp_python暂不兼容
 
 ## 更新日志
+#### 2026-02-05
+- 新增多个预设提示词模板：中英双语提示词生成、超高清图像提示词反推
+- 优化模型加载和推理流程，提升运行效率
+- 完善中文翻译，增强本地化支持
+- 添加了视频接口，支持视频输入，新增了视频反推功能使用的模板：
+  - 视频反推分镜预设：根据视频内容自动生成分镜提示词
+  - 视频字幕预设：根据视频内容自动生成字幕提示词
+- 新增OCR增强功能，支持海报文字识别和样式还原，适配提示词反推需求
+  - OCR增强提示词模板：专为海报OCR文字识别设计，精准提取文字内容和样式属性
+  - 支持识别文字的字体、字号、颜色、排版样式等详细属性
+- 实现智能模型检测系统，自动发现并支持llama_cpp_python新增的VL模型
+- 优化模型名称推断逻辑，根据ChatHandler命名规则自动生成模型名称
+- 扩展模型支持列表，确保向后兼容所有之前支持的模型
+- 实现模型列表去重功能，保持界面简洁有序
+- 新增支持多个模型：moondream3-preview、InternLM-XComposer2-VL、DreamOmni2、MiniCPM-Llama3-V 2.5、Llama-3.2-11B-Vision-Instruct、Phi-3.5-vision-instruct、Moondream2、olmOCR-2、InternVL-1.5、InternVL-2.0、Yi-VL-2.0
+- 新增动态支持功能，llama_cpp_python更新发布支持新的模型版本，即可下载模型使用
+
 #### 2026-01-29
 - 重构了文件目录，安装时需删除旧版文件，请勿覆盖
 - 新增专业AI模型的全面预设提示词模板：
   - **ZIMAGE - Turbo**：专为 Z-Image-Turbo 模型优化，支持8步Turbo推理快速生成1080P高清图像
-  - **FLUX2 - Klein**：专为 FLUX 系列（Flux.1 和 FLUX.2 Klein）模型设计，创建简洁而富有表现力的提示词
+  - **FLUX2 - Klein**：专为 FLUX.2 Klein 模型设计，创建简洁而富有表现力的提示词
   - **LTX-2**：专为 LTX-2 视频生成模型定制，支持动态视频提示词，可生成高质量、音画同步的4K视频
   - **Qwen - Image Layered**：为 Qwen-Image-Layered 模型创建，支持详细分层提示词，处理复杂构图和多个元素
   - **Qwen - Image Edit Combined**：综合编辑提示增强器，用于图像编辑任务
-  - **Qwen - Image Dual**：专为 Qwen Image 系列（包括 Qwen Image 和 Qwen Image 2512）设计，支持高分辨率生成能力
+  - **Qwen - Image Dual**：专为 Qwen Image 2512 模型设计，支持高分辨率生成能力
   - **Video - Reverse Prompt**：视频反推提示词生成器，基于视频内容创建详细的视频描述（600-1000字）
   - **WAN - T2V**：电影导演风格模板，添加电影元素（时间、光源、光线强度、光线角度、色调、拍摄角度、镜头大小、构图）
   - **WAN - I2V**：视频描述提示词改写专家，强调动态内容
@@ -56,11 +73,9 @@ ComfyUI-llama-cpp-vlmforQo是一个功能强大的ComfyUI插件，基于ComfyUI-
   - 专业模型模板：ZIMAGE - Turbo、FLUX2 - Klein、LTX-2、Qwen - Image Layered、Qwen - Image Edit Combined、Qwen - Image Dual
   - 视频模板：Video - Reverse Prompt
   - 电影风格模板：WAN - T2V、WAN - I2V、WAN - I2V Empty、WAN - FLF2V
-- 优化了中英切换功能 
-- 同步更新 README 和 Parameter-Explanation-and-Recommended-Settings 文档，包含完整的模板描述
-- 提供了双语言预设模板，更好的兼容适配不同语言模型的使用（专属预设做了字数限制，满足模型生成需求的同时，保证生成结果的高效，若无法满足需求，请在预设框内输入或外挂自定义）
-- 新增了生成结果的中英切换功能（部分预设添加了强制输出中文如wan等预设模板，可能会有冲突）
-- 添加了汉化文件
+- 优化了中英切换功能，提高语言适配性
+- 提供了双语言预设模板（英文和中文），更好的兼容适配不同语言模型的使用（专属预设做了字数限制，满足模型生成需求的同时，保证生成结果的高效，若无法满足需求，请在预设框内输入或外挂自定义）
+- 新增了生成结果的中英切换功能
 
 #### 2026-01-24
 - 重构了节点文件目录
@@ -88,30 +103,40 @@ ComfyUI-llama-cpp-vlmforQo是一个功能强大的ComfyUI插件，基于ComfyUI-
 - 添加了硬件优化模块，适配高低不同性能硬件，提高推理速度，确保不同硬件都能流畅使用
 - 重写了Prompt Style预设信息
 
+## 支持的模型种类与llama_cpp_python版本同步
+列如：
+- LLaVA-1.6
+- nanoLLaVA
+- MiniCPM-V-4.5
+- GLM-4.6V
+- llama-joycaption
+- moondream3-preview
+- Moondream2
+- InternLM-XComposer2-VL
+- DreamOmni2
+- MiniCPM-Llama3-V 2.5
+- Llama-3.2-11B-Vision-Instruct
+- CogVLM2
+- CogVLM-MOE
+- Phi-3.5-vision-instruct
+- Phi-3-vision-128k-instruct
+- Qwen2.5-VL
+- Qwen3-VL-Instruct
+- LLaMA-3.1-Vision
+- Zhipu-Vision
+- 智谱AI-Vision
+- olmOCR-2
+- InternVL-1.5
+- InternVL-2.0
+- Yi-VL-2.0
+
 ## 模型下载地址
 
-### 常用模型下载
+请查看（./doc/部分模型系列介绍及链接.md）
 
-#### 反推模型
-- **llama-joycaption**：https://huggingface.co/mradermacher/llama-joycaption-beta-one-hf-llava-GGUF
-  - 推荐：llama-joycaption-beta-one-hf-llava.Q4_K_M.gguf
-- **mmproj模型**：https://huggingface.co/concedo/llama-joycaption-beta-one-hf-llava-mmproj-gguf
-  - 推荐：llama-joycaption-beta-one-llava-mmproj-model-f16.gguf
+## 节点参数说明与推荐设置
 
-- **MobileVLM**: https://huggingface.co/Blombert/MobileVLM-3B-GGUF
-- **nanoLLaVA**: https://huggingface.co/saiphyohein/nanollava-1.5-gguf
-- **LFM2.5-VL-1.6B**: https://huggingface.co/unsloth/LFM2.5-VL-1.6B-GGUF
-- **Moondream2**: https://huggingface.co/Hahasb/moondream2-20250414-GGUF
-- **Qwen3-VL**: https://huggingface.co/mradermacher/Qwen3-VL-8B-Instruct-abliterated-v2.0-GGUF
-- **GLM-4.6V**: https://huggingface.co/unsloth/GLM-4.6V-Flash-GGUF
-- **MiniCPM-V-4.5**: https://huggingface.co/openbmb/MiniCPM-V-4_5-gguf
-
-### 量化级别选择
-
-- **Q4_K_M**：平衡大小和质量（推荐）
-- **Q5_K_M**：更高质量，稍大文件
-- **Q3_K_M**：更小文件，适合低显存设备
-- **Q2_K**：最小文件，质量较低
+请查看（./doc/参数说明与推荐设置.md）
 
 ## 安装说明
 
@@ -140,11 +165,15 @@ ComfyUI-llama-cpp-vlmforQo是一个功能强大的ComfyUI插件，基于ComfyUI-
 
 ## 工作流示例
 
-[workflow](./workflow/llama-cpp-vlmforQo.json)
+[工作流文件](./workflows/llama-cpp-vlmforQo.json)
 
-![workflow](./workflow/TEXT.png)
+![工作流示例 - 文本模式](./workflows/TEXT.png)
 
-![workflow](./workflow/Images.png)
+![工作流示例 - 图像模式](./workflows/Image.png)
+
+![工作流示例 - 视频模式](./workflows/Video.png)
+
+
 
 ## 使用指南（根据自己电脑配置情况选择调整）
 
@@ -168,6 +197,8 @@ ComfyUI-llama-cpp-vlmforQo是一个功能强大的ComfyUI插件，基于ComfyUI-
 4. **管理资源**：
    - 使用 `Llama-cpp 清理会话` 节点释放会话资源
    - 使用 `Llama-cpp 卸载模型` 节点释放模型资源
+
+注：各参数详细介绍请查看（.doc\参数说明与推荐设置.md）
 
 ### 1.1 CPU/GPU 运行模式选择
 
@@ -218,6 +249,12 @@ ComfyUI-llama-cpp-vlmforQo是一个功能强大的ComfyUI插件，基于ComfyUI-
 
 ### 2. 推荐工作流
 
+#### 提示词生成工作流
+1. 加载模型（如 Qwen3-VL）
+2. 关闭 "自动配置选项"
+3. 输入提示词内容
+4. 选择 "Prompt Style" 系列或专属模型预设
+
 #### 图片描述工作流
 1. 加载模型（如 Moondream2）
 2. 连接图片输入
@@ -231,13 +268,11 @@ ComfyUI-llama-cpp-vlmforQo是一个功能强大的ComfyUI插件，基于ComfyUI-
 4. 配置 max_frames 参数
 5. 执行推理获取视频摘要
 
-#### 边界框生成工作流
-1. 加载模型（如 Qwen3-VL）
-2. 连接图片输入
-3. 选择 "Vision - Bounding Box" 预设
-4. 使用 `JSON 转 Bounding Box` 节点可视化结果
+
 
 ## 常见问题
+
+工作流推荐单独分块运行生成，避免提示词生成+图片生成等组合工作流运行，导致资源占用高
 
 ### 1. 模型加载失败
 
@@ -270,12 +305,14 @@ ComfyUI-llama-cpp-vlmforQo是一个功能强大的ComfyUI插件，基于ComfyUI-
 - 模型太大
 - GPU 层数设置过低
 - 硬件性能限制
+- system_prompts 字数无限制
 
 **解决方案**：
 - 使用更小的模型
 - 增加 `n_gpu_layers` 值
 - 降低 `n_ctx` 值
 - 关闭不必要的应用程序
+- 添加字数限制，如300字以内，字数少推理快
 
 ### 4. 生成结果质量差
 
@@ -319,10 +356,10 @@ ComfyUI-llama-cpp-vlmforQo是一个功能强大的ComfyUI插件，基于ComfyUI-
 - **Normal - Describe**：简单描述图片内容
 
 ### Prompt 风格模板
-- **Prompt Style - Tags**：生成图片标签列表，适用于SDXL等模型
-- **Prompt Style - Simple**：简洁的图片描述（300字以内）
-- **Prompt Style - Detailed**：详细的图片描述（500字以内）
-- **Prompt Style - Comprehensive Expansion**：详细扩写提示词，增强清晰度和表现力（800字以内）
+- **Prompt Style - Tags**：生成图片标签列表，适用于SDXL等模型，最多输出50个唯一标签
+- **Prompt Style - Simple**：简洁的图片描述（300字以内），增强清晰度和表现力
+- **Prompt Style - Detailed**：详细的图片描述（500字以内），为每个元素添加具体细节
+- **Prompt Style - Comprehensive Expansion**：详细扩写提示词（800字以内），增强清晰度和表现力
 - **Creative - Refine & Expand Prompt**：优化并扩写提示词，使其更具表现力和视觉丰富性
 
 ### 创意模板
@@ -331,24 +368,36 @@ ComfyUI-llama-cpp-vlmforQo是一个功能强大的ComfyUI插件，基于ComfyUI-
 - **Creative - Short Story**：基于图片或视频生成短篇故事
 
 ### 视觉模板
-- **Vision - *Bounding Box**：生成物体检测的边界框
+- **Vision - Bounding Box**：生成物体检测的边界框，输出JSON格式的坐标列表
+
+### OCR模板
+- **OCR - Enhanced**：专业的海报OCR文字识别，精准提取文字内容和样式属性，适配提示词反推需求
+
+### 多语言模板
+- **[多语言] 中英双语提示词生成**：专业的中英双语提示词生成专家，擅长为跨境创作和双语文档场景生成高质量的中英双语提示词，确保两种语言传达相同的视觉信息和创意意图
+
+### 高分辨率模板
+- **[高分辨率] 超高清图像提示词反推**：专业的超高清图像提示词反推专家，擅长从4K/8K分辨率的超高清图像中提取详细的视觉信息，并生成精准的提示词，包含主体、场景、材质、纹理、光线、色彩、构图等所有细节
+
+### 视频模板
+- **Video - Reverse Prompt**：视频反推提示词，根据视频内容生成详细的视频描述
+- **Video - Detailed Scene Breakdown**：视频分镜详细拆解，按时间顺序为每个分镜提供完整细节
+- **Video - Subtitle Format**：生成标准格式的视频字幕，包含时间码和同步文本
 
 ### 专业模型模板
 - **ZIMAGE - Turbo**：专为 Z-Image-Turbo 模型设计，创建高效且高质量的图像生成提示，利用8步Turbo推理快速生成1080P高清图像
-- **FLUX2 - Klein**：专为 FLUX 系列（Flux.1 和 FLUX.2 Klein）模型设计，创建简洁而富有表现力的提示
+- **FLUX2 - Klein**：专为FLUX.2 Klein模型设计，创建简洁而富有表现力的提示
 - **LTX-2**：专为 LTX-2 模型设计，创建详细而富有动态感的视频生成提示，支持高质量、音画同步的4K视频
 - **Qwen - Image Layered**：专为 Qwen-Image-Layered 模型设计，创建详细的分层提示，处理复杂构图和多个元素
-- **Qwen - Image Edit Combined**：综合编辑提示增强器，用于图像编辑任务
-- **Qwen - Image Dual**：专为 Qwen Image 系列（包括 Qwen Image 和 Qwen Image 2512）模型设计，创建高质量的图像生成提示
-
-### 视频模板
-- **Video - Reverse Prompt**：视频反推提示词，根据视频内容生成详细的视频描述提示词
+- **Qwen - Image Edit Combined**：综合编辑提示增强器，用于图像编辑任务，支持添加、删除、替换等操作
+- **Qwen - Image 2512**：专为 Qwen Image 2512 模型设计，创建高质量的图像生成提示，充分发挥该模型的高分辨率特性
 
 ### 电影风格模板
-- **WAN - T2V**：电影导演风格，为原始prompt添加电影元素（时间、光源、光线强度、光线角度、色调、拍摄角度、镜头大小、构图等）
-- **WAN - I2V**：视频描述提示词改写专家，根据图像和输入提示词改写视频描述，强调动态内容
-- **WAN - I2V Empty**：视频描述提示词撰写专家，根据图像发挥想象生成视频描述
-- **WAN - FLF2V**：Prompt优化师，根据视频首尾帧图片优化改写Prompt，强调运动信息和镜头运镜
+- **WAN - Text to Video**：电影导演风格，为原始prompt添加电影元素（时间、光源、光线强度、光线角度、色调、拍摄角度、镜头大小、构图等）
+- **WAN - Image to Video**：视频描述提示词改写专家，根据图像和输入提示词改写视频描述，强调动态内容
+- **WAN - Image to Video Empty**：视频描述提示词撰写专家，根据图像发挥想象生成视频描述
+- **WAN - FLF to Video**：Prompt优化师，根据视频首尾帧图片优化改写Prompt，强调运动信息和镜头运镜
+
 ## 致谢
 * [ComfyUI-llama-cpp_vlm](https://github.com/lihaoyun6/ComfyUI-llama-cpp_vlm) @lihaoyun6
 * [llama-cpp-python](https://github.com/JamePeng/llama-cpp-python) @JamePeng
