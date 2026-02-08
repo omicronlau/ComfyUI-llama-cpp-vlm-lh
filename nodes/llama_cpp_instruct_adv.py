@@ -23,9 +23,21 @@ from ..support.prompt_enhancer_preset_zh import (
     FLUX2_KLEIN_ZH,
     LTX2_ZH,
     VIDEO_TO_PROMPT_ZH,
+    VIDEO_DETAILED_SCENE_BREAKDOWN_ZH,
+    VIDEO_SUBTITLE_FORMAT_ZH,
     OCR_ENHANCED_ZH,
     BILINGUAL_PROMPT_GENERATE_ZH,
     ULTRA_HD_IMAGE_REVERSE_ZH,
+    NORMAL_DESCRIBE_ZH,
+    PROMPT_STYLE_TAGS_ZH,
+    PROMPT_STYLE_SIMPLE_ZH,
+    PROMPT_STYLE_DETAILED_ZH,
+    PROMPT_STYLE_COMPREHENSIVE_ZH,
+    CREATIVE_DETAILED_ANALYSIS_ZH,
+    CREATIVE_SUMMARIZE_VIDEO_ZH,
+    CREATIVE_SHORT_STORY_ZH,
+    CREATIVE_REFINE_EXPAND_PROMPT_ZH,
+    VISION_BOUNDING_BOX_ZH,
 )
 
 from ..support.prompt_enhancer_preset_en import (
@@ -41,8 +53,20 @@ from ..support.prompt_enhancer_preset_en import (
     QWEN_IMAGE_2512_EN,
     ZIMAGE_TURBO_EN,
     VIDEO_TO_PROMPT_EN,
+    VIDEO_DETAILED_SCENE_BREAKDOWN_EN,
+    VIDEO_SUBTITLE_FORMAT_EN,
     BILINGUAL_PROMPT_GENERATE_EN,
     ULTRA_HD_IMAGE_REVERSE_EN,
+    NORMAL_DESCRIBE_EN,
+    PROMPT_STYLE_TAGS_EN,
+    PROMPT_STYLE_SIMPLE_EN,
+    PROMPT_STYLE_DETAILED_EN,
+    PROMPT_STYLE_COMPREHENSIVE_EN,
+    CREATIVE_DETAILED_ANALYSIS_EN,
+    CREATIVE_SUMMARIZE_VIDEO_EN,
+    CREATIVE_SHORT_STORY_EN,
+    CREATIVE_REFINE_EXPAND_PROMPT_EN,
+    VISION_BOUNDING_BOX_EN,
 )
 
 class llama_cpp_instruct_adv:
@@ -378,40 +402,40 @@ class llama_cpp_instruct_adv:
             preset_text = VIDEO_TO_PROMPT_ZH if input_language == "zh" else VIDEO_TO_PROMPT_EN
         elif preset_text == "PROMPT_STYLE_TAGS":
             # Prompt Style - Tags 双语言预设
-            preset_text = PRESET_PROMPTS_ZH.get("Prompt Style - Tags", "") if input_language == "zh" else PRESET_PROMPTS_EN.get("Prompt Style - Tags", "")
+            preset_text = PROMPT_STYLE_TAGS_ZH if input_language == "zh" else PROMPT_STYLE_TAGS_EN
         elif preset_text == "PROMPT_STYLE_SIMPLE":
             # Prompt Style - Simple 双语言预设
-            preset_text = PRESET_PROMPTS_ZH.get("Prompt Style - Simple", "") if input_language == "zh" else PRESET_PROMPTS_EN.get("Prompt Style - Simple", "")
+            preset_text = PROMPT_STYLE_SIMPLE_ZH if input_language == "zh" else PROMPT_STYLE_SIMPLE_EN
         elif preset_text == "PROMPT_STYLE_DETAILED":
             # Prompt Style - Detailed 双语言预设
-            preset_text = PRESET_PROMPTS_ZH.get("Prompt Style - Detailed", "") if input_language == "zh" else PRESET_PROMPTS_EN.get("Prompt Style - Detailed", "")
+            preset_text = PROMPT_STYLE_DETAILED_ZH if input_language == "zh" else PROMPT_STYLE_DETAILED_EN
         elif preset_text == "PROMPT_STYLE_COMPREHENSIVE":
             # Prompt Style - Comprehensive Expansion 双语言预设
-            preset_text = PRESET_PROMPTS_ZH.get("Prompt Style - Comprehensive Expansion", "") if input_language == "zh" else PRESET_PROMPTS_EN.get("Prompt Style - Comprehensive Expansion", "")
+            preset_text = PROMPT_STYLE_COMPREHENSIVE_ZH if input_language == "zh" else PROMPT_STYLE_COMPREHENSIVE_EN
         elif preset_text == "PROMPT_STYLE_REFINE":
             # Creative - Refine & Expand Prompt 双语言预设
-            preset_text = PRESET_PROMPTS_ZH.get("Creative - Refine & Expand Prompt", "") if input_language == "zh" else PRESET_PROMPTS_EN.get("Creative - Refine & Expand Prompt", "")
+            preset_text = CREATIVE_REFINE_EXPAND_PROMPT_ZH if input_language == "zh" else CREATIVE_REFINE_EXPAND_PROMPT_EN
         elif preset_text == "CREATIVE_DETAILED_ANALYSIS":
             # Creative - Detailed Analysis 双语言预设
-            preset_text = PRESET_PROMPTS_ZH.get("Creative - Detailed Analysis", "") if input_language == "zh" else PRESET_PROMPTS_EN.get("Creative - Detailed Analysis", "")
+            preset_text = CREATIVE_DETAILED_ANALYSIS_ZH if input_language == "zh" else CREATIVE_DETAILED_ANALYSIS_EN
         elif preset_text == "CREATIVE_SUMMARIZE_VIDEO":
             # Creative - Summarize Video 双语言预设
-            preset_text = PRESET_PROMPTS_ZH.get("Creative - Summarize Video", "") if input_language == "zh" else PRESET_PROMPTS_EN.get("Creative - Summarize Video", "")
+            preset_text = CREATIVE_SUMMARIZE_VIDEO_ZH if input_language == "zh" else CREATIVE_SUMMARIZE_VIDEO_EN
         elif preset_text == "CREATIVE_SHORT_STORY":
             # Creative - Short Story 双语言预设
-            preset_text = PRESET_PROMPTS_ZH.get("Creative - Short Story", "") if input_language == "zh" else PRESET_PROMPTS_EN.get("Creative - Short Story", "")
+            preset_text = CREATIVE_SHORT_STORY_ZH if input_language == "zh" else CREATIVE_SHORT_STORY_EN
         elif preset_text == "VISION_BOUNDING_BOX":
             # Vision - Bounding Box 双语言预设
-            preset_text = PRESET_PROMPTS_ZH.get("Vision - *Bounding Box", "") if input_language == "zh" else PRESET_PROMPTS_EN.get("Vision - *Bounding Box", "")
+            preset_text = VISION_BOUNDING_BOX_ZH if input_language == "zh" else VISION_BOUNDING_BOX_EN
         elif preset_text == "NORMAL_DESCRIBE":
             # Normal - Describe 双语言预设
-            preset_text = PRESET_PROMPTS_ZH.get("Normal - Describe", "") if input_language == "zh" else PRESET_PROMPTS_EN.get("Normal - Describe", "")
+            preset_text = NORMAL_DESCRIBE_ZH if input_language == "zh" else NORMAL_DESCRIBE_EN
         elif preset_text == "VIDEO_DETAILED_SCENE_BREAKDOWN":
             # Video - Detailed Scene Breakdown 双语言预设
-            preset_text = PRESET_PROMPTS_ZH.get("Video - Detailed Scene Breakdown", "") if input_language == "zh" else PRESET_PROMPTS_EN.get("Video - Detailed Scene Breakdown", "")
+            preset_text = VIDEO_DETAILED_SCENE_BREAKDOWN_ZH if input_language == "zh" else VIDEO_DETAILED_SCENE_BREAKDOWN_EN
         elif preset_text == "VIDEO_SUBTITLE_FORMAT":
             # Video - Subtitle Format 双语言预设
-            preset_text = PRESET_PROMPTS_ZH.get("Video - Subtitle Format", "") if input_language == "zh" else PRESET_PROMPTS_EN.get("Video - Subtitle Format", "")
+            preset_text = VIDEO_SUBTITLE_FORMAT_ZH if input_language == "zh" else VIDEO_SUBTITLE_FORMAT_EN
         elif preset_text == "OCR_ENHANCED":
             # OCR - Enhanced 双语言预设
             preset_text = OCR_ENHANCED_ZH if input_language == "zh" else ""
