@@ -10,6 +10,9 @@ from ..common import HARDWARE_INFO, chat_handlers, folder_paths, LLAMA_CPP_STORA
 class llama_cpp_model_loader:
     @classmethod
     def INPUT_TYPES(s):
+        # 动态导入chat_handlers，确保使用最新的列表
+        from ..common import chat_handlers
+        
         all_llms = folder_paths.get_filename_list("LLM")
         # 筛选.gguf和.safetensors格式的主模型
         model_list = [
@@ -53,9 +56,8 @@ class llama_cpp_model_loader:
         return {
             "required": {
                 "model": (model_list, {"tooltip": "选择要加载的LLM模型文件"}),
-                "enable_mmproj": ("BOOLEAN", {"default": False, "label": "启用MMProj模型（多模态）", "tooltip": "启用后可处理图片输入"}),
+                "auto_config": ("BOOLEAN", {"default": True, "label": "自动配置（多模态+对话格式）", "tooltip": "启用后自动选择对话格式处理器并启用多模态功能，提示词生成时建议关闭"}),
                 "mmproj": (mmproj_list, {"default": "None", "tooltip": "选择对应的视觉编码模型文件"}),
-                "chat_handler": (chat_handlers, {"default": "Qwen3-VL", "tooltip": "选择适合模型的对话格式处理器"}),
                 "device_mode": (["GPU", "CPU"], {"default": default_device_mode, "tooltip": "选择运行模式：GPU=使用显卡加速，CPU=纯CPU运行"}),
                 "n_ctx": ("INT", {"default": default_n_ctx, "min": 1024, "max": 327680, "step": 128, "tooltip": "上下文长度，影响可处理的文本长度"}),
                 "n_gpu_layers": ("INT", {"default": default_n_gpu_layers, "min": -1, "max": 1000, "step": 1, "tooltip": "加载到GPU的模型层数，-1=全部加载（GPU模式有效）"}),
@@ -71,9 +73,76 @@ class llama_cpp_model_loader:
     CATEGORY = "llama-cpp-vlm"
     
     @classmethod
-    def IS_CHANGED(s, model, enable_mmproj, mmproj, chat_handler, device_mode, n_ctx, n_gpu_layers, vram_limit, image_min_tokens, image_max_tokens):
+    def IS_CHANGED(s, model, auto_config, mmproj, device_mode, n_ctx, n_gpu_layers, vram_limit, image_min_tokens, image_max_tokens):
         if LLAMA_CPP_STORAGE.llm is None:
             return float("NaN") 
+        
+        # 根据模型名称自动推断对话格式处理器
+        def get_auto_chat_handler(model_name):
+            # 模型名称映射到对话格式处理器
+            model_handler_map = {
+                "LLaVA-1.6": "LLaVA-1.6",
+                "nanoLLaVA": "nanoLLaVA",
+                "llama-joycaption": "LLaVA-1.6",
+                "moondream3-preview": "moondream3-preview",
+                "Moondream2": "Moondream2",
+                "MiniCPM-V-4.5": "MiniCPM-V-4.5",
+                "GLM-4.6V": "GLM-4.6V",
+                "InternLM-XComposer2-VL": "InternLM-XComposer2-VL",
+                "DreamOmni2": "DreamOmni2",
+                "MiniCPM-Llama3-V 2.5": "MiniCPM-Llama3-V 2.5",
+                "Llama-3.2-11B-Vision-Instruct": "Llama-3.2-11B-Vision-Instruct",
+                "CogVLM2": "CogVLM2",
+                "CogVLM-MOE": "CogVLM-MOE",
+                "Phi-3.5-vision-instruct": "Phi-3.5-vision-instruct",
+                "Phi-3-vision-128k-instruct": "Phi-3-vision-128k-instruct",
+                "Qwen2.5-VL": "Qwen2.5-VL",
+                "Qwen3-VL": "Qwen3-VL",
+                "Qwen3-VL-Chat": "Qwen3-VL-Chat",
+                "Qwen3-VL-Instruct": "Qwen3-VL-Instruct",
+                "LLaMA-3.1-Vision": "LLaMA-3.1-Vision",
+                "Zhipu-Vision": "Zhipu-Vision",
+                "智谱AI-Vision": "智谱AI-Vision",
+                "olmOCR-2": "olmOCR-2",
+                "InternVL-1.5": "InternVL-1.5",
+                "InternVL-2.0": "InternVL-2.0",
+                "Yi-VL-2.0": "Yi-VL-2.0",
+                "Gim 41 V": "GLM-4.1V-Thinking",
+                "Gim 46 V": "GLM-4.6V",
+                "Gemma-3": "Gemma-3",
+                "Granite DocLing": "Granite-DocLing",
+                "Lfm 2": "Lfm 2 VL",
+                "Llama3 Vision Alpha": "Llama3 Vision Alpha",
+                "LLaVA-1.5": "LLaVA-1.5",
+                "Mini Cpmv26": "MiniCPM-V-2.6",
+                "Mini Cpmv45": "MiniCPM-V-4.5",
+                "Moondream": "Moondream2",
+                "Nano Llava": "nanoLLaVA",
+                "玄武岩": "Obsidian",
+                "Qwen25 Vl": "Qwen2.5-VL",
+                "Qwen3 Vl": "Qwen3-VL"
+            }
+            
+            # 尝试直接匹配
+            if model_name in model_handler_map:
+                return model_handler_map[model_name]
+            
+            # 尝试部分匹配
+            model_name_lower = model_name.lower()
+            for key, handler in model_handler_map.items():
+                if key.lower() in model_name_lower:
+                    return handler
+            
+            # 默认使用LLaVA-1.6
+            return "LLaVA-1.6"
+        
+        # 确定使用的对话格式处理器和是否启用多模态
+        if auto_config:
+            chat_handler = get_auto_chat_handler(model)
+            enable_mmproj = True
+        else:
+            chat_handler = "None"
+            enable_mmproj = False
         
         custom_config = {
             "model": model, "enable_mmproj": enable_mmproj, "mmproj": mmproj,
@@ -83,7 +152,76 @@ class llama_cpp_model_loader:
         }
         return json.dumps(custom_config, sort_keys=True, ensure_ascii=False)
     
-    def loadmodel(self, model, enable_mmproj, mmproj, chat_handler, device_mode, n_ctx, n_gpu_layers, vram_limit, image_min_tokens, image_max_tokens):
+    def loadmodel(self, model, auto_config, mmproj, device_mode, n_ctx, n_gpu_layers, vram_limit, image_min_tokens, image_max_tokens):
+        # 根据模型名称自动推断对话格式处理器
+        def get_auto_chat_handler(model_name):
+            # 模型名称映射到对话格式处理器
+            model_handler_map = {
+                "LLaVA-1.6": "LLaVA-1.6",
+                "nanoLLaVA": "nanoLLaVA",
+                "llama-joycaption": "LLaVA-1.6",
+                "moondream3-preview": "moondream3-preview",
+                "Moondream2": "Moondream2",
+                "MiniCPM-V-4.5": "MiniCPM-V-4.5",
+                "GLM-4.6V": "GLM-4.6V",
+                "InternLM-XComposer2-VL": "InternLM-XComposer2-VL",
+                "DreamOmni2": "DreamOmni2",
+                "MiniCPM-Llama3-V 2.5": "MiniCPM-Llama3-V 2.5",
+                "Llama-3.2-11B-Vision-Instruct": "Llama-3.2-11B-Vision-Instruct",
+                "CogVLM2": "CogVLM2",
+                "CogVLM-MOE": "CogVLM-MOE",
+                "Phi-3.5-vision-instruct": "Phi-3.5-vision-instruct",
+                "Phi-3-vision-128k-instruct": "Phi-3-vision-128k-instruct",
+                "Qwen2.5-VL": "Qwen2.5-VL",
+                "Qwen3-VL": "Qwen3-VL",
+                "Qwen3-VL-Chat": "Qwen3-VL-Chat",
+                "Qwen3-VL-Instruct": "Qwen3-VL-Instruct",
+                "LLaMA-3.1-Vision": "LLaMA-3.1-Vision",
+                "Zhipu-Vision": "Zhipu-Vision",
+                "智谱AI-Vision": "智谱AI-Vision",
+                "olmOCR-2": "olmOCR-2",
+                "InternVL-1.5": "InternVL-1.5",
+                "InternVL-2.0": "InternVL-2.0",
+                "Yi-VL-2.0": "Yi-VL-2.0",
+                "Gim 41 V": "GLM-4.1V-Thinking",
+                "Gim 46 V": "GLM-4.6V",
+                "Gemma-3": "Gemma-3",
+                "Granite DocLing": "Granite-DocLing",
+                "Lfm 2": "Lfm 2 VL",
+                "Llama3 Vision Alpha": "Llama3 Vision Alpha",
+                "LLaVA-1.5": "LLaVA-1.5",
+                "Mini Cpmv26": "MiniCPM-V-2.6",
+                "Mini Cpmv45": "MiniCPM-V-4.5",
+                "Moondream": "Moondream2",
+                "Nano Llava": "nanoLLaVA",
+                "玄武岩": "Obsidian",
+                "Qwen25 Vl": "Qwen2.5-VL",
+                "Qwen3 Vl": "Qwen3-VL"
+            }
+            
+            # 尝试直接匹配
+            if model_name in model_handler_map:
+                return model_handler_map[model_name]
+            
+            # 尝试部分匹配
+            model_name_lower = model_name.lower()
+            for key, handler in model_handler_map.items():
+                if key.lower() in model_name_lower:
+                    return handler
+            
+            # 默认使用LLaVA-1.6
+            return "LLaVA-1.6"
+        
+        # 确定使用的对话格式处理器和是否启用多模态
+        if auto_config:
+            chat_handler = get_auto_chat_handler(model)
+            enable_mmproj = True
+            print(f"【自动配置】根据模型 {model} 选择对话格式处理器: {chat_handler}，并启用多模态功能")
+        else:
+            chat_handler = "None"
+            enable_mmproj = False
+            print(f"【提示】自动配置已禁用，对话格式处理器和多模态功能均已关闭")
+        
         custom_config = {
             "model": model, "enable_mmproj": enable_mmproj, "mmproj": mmproj,
             "chat_handler": chat_handler, "device_mode": device_mode, "n_ctx": n_ctx, 

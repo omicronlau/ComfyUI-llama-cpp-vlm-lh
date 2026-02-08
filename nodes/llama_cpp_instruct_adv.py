@@ -18,11 +18,14 @@ from ..support.prompt_enhancer_preset_zh import (
     WAN_FLF2V_ZH,
     QWEN_IMAGE_LAYERED_ZH,
     QWEN_IMAGE_EDIT_COMBINED_ZH,
-    QWEN_IMAGE_SERIES_ZH,
+    QWEN_IMAGE_2512_ZH,
     ZIMAGE_TURBO_ZH,
     FLUX2_KLEIN_ZH,
     LTX2_ZH,
     VIDEO_TO_PROMPT_ZH,
+    OCR_ENHANCED_ZH,
+    BILINGUAL_PROMPT_GENERATE_ZH,
+    ULTRA_HD_IMAGE_REVERSE_ZH,
 )
 
 from ..support.prompt_enhancer_preset_en import (
@@ -35,9 +38,11 @@ from ..support.prompt_enhancer_preset_en import (
     LTX2_EN,
     QWEN_IMAGE_LAYERED_EN,
     QWEN_IMAGE_EDIT_COMBINED_EN,
-    QWEN_IMAGE_SERIES_EN,
+    QWEN_IMAGE_2512_EN,
     ZIMAGE_TURBO_EN,
     VIDEO_TO_PROMPT_EN,
+    BILINGUAL_PROMPT_GENERATE_EN,
+    ULTRA_HD_IMAGE_REVERSE_EN,
 )
 
 class llama_cpp_instruct_adv:
@@ -58,15 +63,15 @@ class llama_cpp_instruct_adv:
     # 文生图 (Text to Image)
     preset_prompts["[Text to Image] ZIMAGE - Turbo"] = "ZIMAGE_TURBO"
     preset_prompts["[Text to Image] FLUX2 - Klein"] = "FLUX2_KLEIN"
-    preset_prompts["[Text to Image] Qwen - Image Dual"] = "QWEN_IMAGE_SERIES"
+    preset_prompts["[Text to Image] Qwen - Image 2512"] = "QWEN_IMAGE_2512"
     
     # 图编辑 (Image Edit)
     preset_prompts["[Image Edit] Qwen - Image Edit Combined"] = "QWEN_IMAGE_EDIT_COMBINED"
     preset_prompts["[Image Edit] Qwen - Image Layered"] = "QWEN_IMAGE_LAYERED"  
         
     # 文生视频 (Text to Video)
-    preset_prompts["[Text to Video] WAN - Text to Video"] = "WAN_T2V"
     preset_prompts["[Text to Video] LTX-2"] = "LTX2"
+    preset_prompts["[Text to Video] WAN - Text to Video"] = "WAN_T2V"   
     
     # 图生视频 (Image to Video)
     preset_prompts["[Image to Video] WAN - Image to Video"] = "WAN_I2V"
@@ -86,10 +91,20 @@ class llama_cpp_instruct_adv:
     preset_prompts["[Creative] Short Story"] = "CREATIVE_SHORT_STORY"
     
     # 视频分析 (Video Analysis)
-    preset_prompts["[Video Analysis] Video - Reverse Prompt"] = "VIDEO_TO_PROMPT"   
+    preset_prompts["[Video Analysis] Video - Reverse Prompt"] = "VIDEO_TO_PROMPT"
+    preset_prompts["[Video Analysis] Video - Detailed Scene Breakdown"] = "VIDEO_DETAILED_SCENE_BREAKDOWN"
+    preset_prompts["[Video Analysis] Video - Subtitle Format"] = "VIDEO_SUBTITLE_FORMAT"
      
     # 视觉任务 (Vision)
     preset_prompts["[Vision] Bounding Box"] = "VISION_BOUNDING_BOX"
+    # OCR任务
+    preset_prompts["[OCR] Enhanced OCR"] = "OCR_ENHANCED"
+    # 多语言任务 (Multilingual)
+    preset_prompts["[Multilingual] Bilingual Prompt Generate"] = "BILINGUAL_PROMPT_GENERATE"
+    # 高清任务 (HighRes)
+    preset_prompts["[HighRes] Ultra HD Image Reverse"] = "ULTRA_HD_IMAGE_REVERSE"
+
+
     
 
     
@@ -108,6 +123,8 @@ class llama_cpp_instruct_adv:
                 "output_language": (["Auto", "中文", "English"], {"default": "Auto"}),
                 "max_frames": ("INT", {"default": 16, "min": 2, "max": 1024, "step": 1}),
                 "max_size": ("INT", {"default": 256, "min": 128, "max": 16384, "step": 64}),
+                "sampling_mode": (["Auto (Uniform)", "Manual (Indices)"], {"default": "Auto (Uniform)", "tooltip": "抽帧模式: 自动均匀采样或手动指定索引"}),
+                "manual_indices": ("STRING", {"default": "", "placeholder": "输入索引 (例如: 0,10,20) 或范围 (例如: 0-10)", "tooltip": "手动模式下的帧索引，仅在sampling_mode为Manual时生效"}),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff, "step": 1}),
                 "force_offload": ("BOOLEAN", {"default": False}),
                 "save_states": ("BOOLEAN", {"default": False}),
@@ -116,6 +133,7 @@ class llama_cpp_instruct_adv:
             "optional": {
                 "parameters": ("LLAMACPPARAMS",),
                 "images": ("IMAGE",),
+                "video": ("VIDEO",),
                 "queue_handler": (any_type,),
             },
         }
@@ -166,12 +184,34 @@ class llama_cpp_instruct_adv:
         
         return result
     
-    def process(self, llama_model, preset_prompt, custom_prompt, system_prompt, inference_mode, preset_prompts_language, output_language, max_frames, max_size, seed, force_offload, save_states, unique_id, parameters=None, images=None, queue_handler=None):
+    def process(self, llama_model, preset_prompt, custom_prompt, system_prompt, inference_mode, preset_prompts_language, output_language, max_frames, max_size, sampling_mode, manual_indices, seed, force_offload, save_states, unique_id, parameters=None, images=None, video=None, queue_handler=None):
         if not llama_model.llm:
             raise RuntimeError("【错误】模型未加载或已卸载，请先加载LLM模型")
         
         video_input = inference_mode == "video"
         text_input = inference_mode == "text"
+        
+        # 处理视频输入
+        if video is not None:
+            print(f"【视频处理】开始处理视频输入")
+            try:
+                # 加载视频为tensor
+                video_tensor = self._load_video_as_tensor(video)
+                print(f"【视频处理】视频加载成功，帧数量: {video_tensor.shape[0]}")
+                
+                # 提取帧
+                if sampling_mode == "Manual (Indices)":
+                    frames_tensor = self._extract_frames_and_tensor(video_tensor, target_indices_str=manual_indices)
+                else:  # Auto (Uniform)
+                    frames_tensor = self._extract_frames_and_tensor(video_tensor, target_count=max_frames)
+                print(f"【视频处理】帧提取成功，提取帧数量: {frames_tensor.shape[0]}")
+                
+                # 使用视频帧覆盖images变量
+                images = frames_tensor
+                video_input = True  # 强制使用视频模式
+            except Exception as e:
+                print(f"【视频处理错误】视频处理失败: {str(e)}")
+                raise RuntimeError(f"视频处理失败: {str(e)}")
         
         if parameters is None:
             # 根据硬件性能和任务类型自动调整参数（使用缓存）
@@ -318,9 +358,9 @@ class llama_cpp_instruct_adv:
         elif preset_text == "QWEN_IMAGE_EDIT_COMBINED":
             # Qwen Image Edit Combined 双语言预设
             preset_text = QWEN_IMAGE_EDIT_COMBINED_ZH if input_language == "zh" else QWEN_IMAGE_EDIT_COMBINED_EN
-        elif preset_text == "QWEN_IMAGE_SERIES":
-            # Qwen Image Series 双语言预设
-            preset_text = QWEN_IMAGE_SERIES_ZH if input_language == "zh" else QWEN_IMAGE_SERIES_EN
+        elif preset_text == "QWEN_IMAGE_2512":
+            # 根据输入语言选择对应的预设
+            preset_text = QWEN_IMAGE_2512_ZH if input_language == "zh" else QWEN_IMAGE_2512_EN
         elif preset_text == "WAN_T2V":
             # WAN Text to Video 双语言预设
             preset_text = WAN_T2V_ZH if input_language == "zh" else WAN_T2V_EN
@@ -366,6 +406,22 @@ class llama_cpp_instruct_adv:
         elif preset_text == "NORMAL_DESCRIBE":
             # Normal - Describe 双语言预设
             preset_text = PRESET_PROMPTS_ZH.get("Normal - Describe", "") if input_language == "zh" else PRESET_PROMPTS_EN.get("Normal - Describe", "")
+        elif preset_text == "VIDEO_DETAILED_SCENE_BREAKDOWN":
+            # Video - Detailed Scene Breakdown 双语言预设
+            preset_text = PRESET_PROMPTS_ZH.get("Video - Detailed Scene Breakdown", "") if input_language == "zh" else PRESET_PROMPTS_EN.get("Video - Detailed Scene Breakdown", "")
+        elif preset_text == "VIDEO_SUBTITLE_FORMAT":
+            # Video - Subtitle Format 双语言预设
+            preset_text = PRESET_PROMPTS_ZH.get("Video - Subtitle Format", "") if input_language == "zh" else PRESET_PROMPTS_EN.get("Video - Subtitle Format", "")
+        elif preset_text == "OCR_ENHANCED":
+            # OCR - Enhanced 双语言预设
+            preset_text = OCR_ENHANCED_ZH if input_language == "zh" else ""
+        elif preset_text == "BILINGUAL_PROMPT_GENERATE":
+            # Bilingual Prompt Generate 双语言预设
+            preset_text = BILINGUAL_PROMPT_GENERATE_ZH if input_language == "zh" else BILINGUAL_PROMPT_GENERATE_EN
+        elif preset_text == "ULTRA_HD_IMAGE_REVERSE":
+            # Ultra HD Image Reverse 双语言预设
+            preset_text = ULTRA_HD_IMAGE_REVERSE_ZH if input_language == "zh" else ULTRA_HD_IMAGE_REVERSE_EN
+
         
         # 处理输出语言设置
         def get_output_language_instruction():
@@ -685,3 +741,162 @@ class llama_cpp_instruct_adv:
             llama_model.clean()
         
         return (out1, out2, int(uid))
+    
+    def _uniform_sample(self, l, n):
+        """
+        从列表中均匀采样 n 个元素
+        算法: 将列表分成 n 个等长区间,从每个区间的中心位置取样
+        """
+        if n >= len(l):
+            return l
+        gap = len(l) / n
+        idxs = [int(i * gap + gap / 2) for i in range(n)]
+        # 确保索引不越界
+        idxs = [min(i, len(l) - 1) for i in idxs]
+        return [l[i] for i in idxs]
+    
+    def _parse_frame_indices(self, indices_str, total_frames):
+        """解析手动输入的帧索引字符串"""
+        indices = set()
+        if not indices_str:
+            return []
+            
+        parts = indices_str.split(',')
+        for part in parts:
+            part = part.strip()
+            if not part:
+                continue
+            try:
+                if '-' in part:
+                    # Range: 0-10
+                    start_str, end_str = part.split('-')
+                    start = int(start_str)
+                    end = int(end_str)
+                    # Handle negative indices
+                    if start < 0: start += total_frames
+                    if end < 0: end += total_frames
+                    
+                    start = max(0, min(start, total_frames - 1))
+                    end = max(0, min(end, total_frames - 1))
+                    
+                    if start <= end:
+                        indices.update(range(start, end + 1))
+                else:
+                    # Single index
+                    idx = int(part)
+                    if idx < 0: idx += total_frames
+                    idx = max(0, min(idx, total_frames - 1))
+                    indices.add(idx)
+            except ValueError:
+                print(f"【提示】忽略无效的帧索引格式: {part}")
+                
+        return sorted(list(indices))
+    
+    def _extract_frames_and_tensor(self, tensor, target_count=None, target_indices_str=None):
+        """从tensor中提取指定数量或指定索引的帧"""
+        total_frames = tensor.shape[0]
+        
+        # 生成所有帧的索引列表
+        all_indices = list(range(total_frames))
+        
+        selected_indices = []
+        if target_indices_str is not None:
+            # 手动模式
+            selected_indices = self._parse_frame_indices(target_indices_str, total_frames)
+            if not selected_indices:
+                print(f"【提示】手动帧索引无效或为空,回退到自动采样")
+                selected_indices = self._uniform_sample(all_indices, 8) # Default fallback
+        elif target_count is not None:
+            # 自动模式
+            selected_indices = self._uniform_sample(all_indices, target_count)
+        else:
+            # 默认全量
+            selected_indices = all_indices
+        
+        # 提取选中的帧 [N, H, W, C]
+        selected_tensor = tensor[selected_indices]
+        
+        return selected_tensor
+    
+    def _load_video_as_tensor(self, video):
+        """
+        从视频输入加载为tensor
+        支持VideoFromFile对象、字典格式和直接的tensor
+        """
+        import os
+        import tempfile
+        import numpy as np
+        import torch
+        
+        # 处理VideoFromFile对象(需要先保存再加载)
+        if hasattr(video, 'save_to') and callable(getattr(video, 'save_to')):
+            try:
+                fd, temp_video_path = tempfile.mkstemp(suffix='.mp4')
+                os.close(fd)
+                video.save_to(temp_video_path)
+                print(f"【视频处理】VideoFromFile saved to temp")
+                
+                # 尝试使用imageio读取视频
+                try:
+                    import imageio
+                    # 读取视频
+                    reader = imageio.get_reader(temp_video_path, 'ffmpeg')
+                    
+                    frames = []
+                    for frame in reader:
+                        frame_float = frame.astype(np.float32) / 255.0
+                        frames.append(frame_float)
+                    reader.close()
+                    
+                    if not frames:
+                        raise RuntimeError("视频文件中没有帧")
+                    
+                    frames_array = np.stack(frames, axis=0)
+                    tensor = torch.from_numpy(frames_array)
+                    
+                    # 清理临时文件
+                    if os.path.exists(temp_video_path):
+                        os.unlink(temp_video_path)
+                    
+                    return tensor
+                except Exception as e:
+                    # 清理临时文件
+                    if os.path.exists(temp_video_path):
+                        os.unlink(temp_video_path)
+                    raise RuntimeError(f"视频文件读取失败: {str(e)}")
+            except Exception as e:
+                if 'temp_video_path' in locals() and os.path.exists(temp_video_path):
+                    os.unlink(temp_video_path)
+                raise RuntimeError(f"VideoFromFile processing failed: {str(e)}")
+        
+        # 处理字典格式
+        elif isinstance(video, dict):
+            input_tensor = video.get('frames') or video.get('video')
+            if input_tensor is None:
+                for v in video.values():
+                    if isinstance(v, torch.Tensor):
+                        input_tensor = v
+                        break
+            if input_tensor is not None:
+                return input_tensor
+            else:
+                raise ValueError(f"Failed to extract tensor from VIDEO input")
+        
+        # 处理tensor
+        elif isinstance(video, torch.Tensor):
+            return video
+        
+        # 尝试索引访问
+        elif hasattr(video, '__getitem__'):
+            try:
+                first_item = video[0]
+                if isinstance(first_item, torch.Tensor):
+                    return first_item
+                elif isinstance(first_item, dict):
+                    input_tensor = first_item.get('frames') or first_item.get('video')
+                    if input_tensor is not None:
+                        return input_tensor
+            except Exception:
+                pass
+        
+        raise ValueError(f"Failed to extract tensor from VIDEO input")
