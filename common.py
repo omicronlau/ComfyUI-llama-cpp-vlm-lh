@@ -654,12 +654,17 @@ class LLAMA_CPP_STORAGE:
                                     init_params["clip_model_path"] = mmproj_path
                                 print(f"【调试】添加参数：{list(init_params.keys())}")
                             except Exception:
-                                # 如果无法获取签名，尝试两种参数名
-                                try:
-                                    init_params["mmproj"] = mmproj_path
-                                except Exception:
-                                    init_params.pop("mmproj", None)
+                                # 如果无法获取签名，根据处理名称添加正确的参数
+                                if backup_cls.__name__ == "Llava15ChatHandler":
                                     init_params["clip_model_path"] = mmproj_path
+                                    print(f"【调试】为Llava15ChatHandler添加clip_model_path参数")
+                                elif backup_cls.__name__ == "Llava16ChatHandler":
+                                    init_params["clip_model_path"] = mmproj_path
+                                    print(f"【调试】为Llava16ChatHandler添加clip_model_path参数")
+                                else:
+                                    # 对于其他处理，尝试mmproj参数
+                                    init_params["mmproj"] = mmproj_path
+                                    print(f"【调试】为{backup_cls.__name__}添加mmproj参数")
                         else:
                             # 即使没有mmproj_path，也为需要clip_model_path的ChatHandler添加默认参数
                             try:
@@ -671,12 +676,13 @@ class LLAMA_CPP_STORAGE:
                                     init_params["mmproj"] = ""
                                     print(f"【调试】为{backup_cls.__name__}添加默认mmproj参数")
                             except Exception:
-                                # 如果无法获取签名，尝试两种参数名
-                                try:
+                                # 如果无法获取签名，根据处理名称添加正确的参数
+                                if backup_cls.__name__ == "Llava15ChatHandler" or backup_cls.__name__ == "Llava16ChatHandler":
                                     init_params["clip_model_path"] = ""
-                                except Exception:
-                                    init_params.pop("clip_model_path", None)
+                                    print(f"【调试】为{backup_cls.__name__}添加默认clip_model_path参数")
+                                else:
                                     init_params["mmproj"] = ""
+                                    print(f"【调试】为{backup_cls.__name__}添加默认mmproj参数")
                         
                         # 特殊处理：如果是Qwen3VLChatHandler，确保它有必要的参数
                         if backup_cls.__name__ == "Qwen3VLChatHandler":
@@ -689,6 +695,17 @@ class LLAMA_CPP_STORAGE:
                             if "mmproj" in init_params:
                                 init_params.pop("mmproj")
                                 print(f"【调试】移除Qwen3VLChatHandler的mmproj参数，避免与Llava15ChatHandler冲突")
+                        
+                        # 特殊处理：如果是Llava15ChatHandler或Llava16ChatHandler，确保只传递clip_model_path
+                        elif backup_cls.__name__ in ["Llava15ChatHandler", "Llava16ChatHandler"]:
+                            # 移除可能冲突的mmproj参数
+                            if "mmproj" in init_params:
+                                init_params.pop("mmproj")
+                                print(f"【调试】移除{backup_cls.__name__}的mmproj参数，避免参数冲突")
+                            # 确保有clip_model_path参数
+                            if "clip_model_path" not in init_params:
+                                init_params["clip_model_path"] = mmproj_path if mmproj_path else ""
+                                print(f"【调试】为{backup_cls.__name__}添加clip_model_path参数：{init_params['clip_model_path']}")
                         
                         # 初始化ChatHandler
                         chat_handler = backup_cls(**init_params)
