@@ -22,7 +22,8 @@ try:
     from llama_cpp import Llama
     from llama_cpp.llama_chat_format import (
         Llava15ChatHandler, Llava16ChatHandler, MoondreamChatHandler,
-        NanoLlavaChatHandler, Llama3VisionAlphaChatHandler, MiniCPMv26ChatHandler
+        NanoLlavaChatHandler, Llama3VisionAlphaChatHandler, MiniCPMv26ChatHandler,
+        Qwen25VLChatHandler, Qwen3VLChatHandler
     )
 except ImportError as e:
     print(f"【错误】缺少llama-cpp-python依赖，请运行：pip install llama-cpp-python")
@@ -40,8 +41,10 @@ except ImportError as e:
 def get_hardware_info():
     hardware_info = {
         "has_cuda": torch.cuda.is_available(),
+        "has_rocm": False,
         "gpu_name": "未知显卡",
         "gpu_vram_total": 0.0,
+        "gpu_vendor": "unknown",
         "cpu_cores": os.cpu_count() or 4,
         "is_high_perf": False,
         "is_low_perf": True
@@ -52,6 +55,7 @@ def get_hardware_info():
             device_prop = torch.cuda.get_device_properties(0)
             hardware_info["gpu_name"] = device_prop.name
             hardware_info["gpu_vram_total"] = round(device_prop.total_memory / (1024 ** 3), 2)
+            hardware_info["gpu_vendor"] = "nvidia"
             
             # 按显存大小和显卡型号分级
             gpu_vram = hardware_info["gpu_vram_total"]
@@ -90,7 +94,101 @@ def get_hardware_info():
         except Exception as e:
             print(f"【提示】显卡信息检测失败，自动使用兼容模式：{e}")
     else:
-        print(f"【硬件检测】未检测到NVIDIA CUDA显卡，自动使用CPU/通用显卡兼容模式")
+        # 尝试检测AMD显卡（ROCm）
+        try:
+            if hasattr(torch, 'hip') or hasattr(torch, 'rocm'):
+                hardware_info["has_rocm"] = True
+                hardware_info["gpu_vendor"] = "amd"
+                
+                # 尝试获取AMD显卡信息
+                try:
+                    if hasattr(torch, 'hip'):
+                        device_prop = torch.hip.get_device_properties(0)
+                    elif hasattr(torch, 'rocm'):
+                        device_prop = torch.rocm.get_device_properties(0)
+                    else:
+                        raise AttributeError("No ROCm device properties available")
+                    
+                    hardware_info["gpu_name"] = device_prop.name
+                    hardware_info["gpu_vram_total"] = round(device_prop.total_memory / (1024 ** 3), 2)
+                    
+                    # AMD显卡性能分级
+                    gpu_vram = hardware_info["gpu_vram_total"]
+                    gpu_name_lower = hardware_info["gpu_name"].lower()
+                    
+                    # 高性能AMD显卡（24GB+显存）
+                    amd_high_perf_flags = ["mi300", "mi250", "instinct", "7900 xtx", "7900 xt"]
+                    # 中高性能AMD显卡（16GB显存）
+                    amd_mid_high_perf_flags = ["7900", "7800 xt", "6950 xt", "6900 xt", "6800 xt"]
+                    # 中性能AMD显卡（12GB显存）
+                    amd_mid_perf_flags = ["7800", "7700 xt", "6750 xt", "6700 xt", "6600 xt"]
+                    # 中低性能AMD显卡（8GB显存）
+                    amd_mid_low_perf_flags = ["7700", "7600", "6750", "6700", "6650 xt", "6600", "rx 7600", "rx 6600"]
+                    
+                    if gpu_vram >= 24 or any(flag.lower() in gpu_name_lower for flag in amd_high_perf_flags):
+                        hardware_info["is_high_perf"] = True
+                        hardware_info["is_low_perf"] = False
+                        hardware_info["perf_level"] = "high"  # 24GB+
+                    elif gpu_vram >= 16 or any(flag.lower() in gpu_name_lower for flag in amd_mid_high_perf_flags):
+                        hardware_info["is_high_perf"] = False
+                        hardware_info["is_low_perf"] = False
+                        hardware_info["perf_level"] = "mid_high"  # 16GB
+                    elif gpu_vram >= 12 or any(flag.lower() in gpu_name_lower for flag in amd_mid_perf_flags):
+                        hardware_info["is_high_perf"] = False
+                        hardware_info["is_low_perf"] = False
+                        hardware_info["perf_level"] = "mid"  # 12GB
+                    elif gpu_vram >= 8 or any(flag.lower() in gpu_name_lower for flag in amd_mid_low_perf_flags):
+                        hardware_info["is_high_perf"] = False
+                        hardware_info["is_low_perf"] = False
+                        hardware_info["perf_level"] = "mid_low"  # 8GB
+                    else:
+                        hardware_info["is_high_perf"] = False
+                        hardware_info["is_low_perf"] = True
+                        hardware_info["perf_level"] = "low"  # <8GB
+                    
+                    print(f"【硬件检测】AMD显卡：{hardware_info['gpu_name']}，显存：{hardware_info['gpu_vram_total']}GB")
+                except AttributeError:
+                    # 如果无法获取设备属性，尝试使用默认设置
+                    hardware_info["gpu_name"] = "AMD GPU (ROCm)"
+                    hardware_info["gpu_vram_total"] = 16.0  # 默认值
+                    hardware_info["is_high_perf"] = False
+                    hardware_info["is_low_perf"] = False
+                    hardware_info["perf_level"] = "mid_high"  # 默认中高性能
+                    print(f"【硬件检测】检测到AMD ROCm环境，使用默认设置")
+            else:
+                # 尝试通过系统信息检测AMD显卡
+                try:
+                    import subprocess
+                    if platform.system() == "Windows":
+                        # Windows: 使用wmic命令
+                        result = subprocess.run(['wmic', 'path', 'win32_VideoController', 'get', 'name'], 
+                                           capture_output=True, text=True, timeout=5)
+                        gpu_names = result.stdout
+                        if 'amd' in gpu_names.lower() or 'radeon' in gpu_names.lower():
+                            hardware_info["gpu_vendor"] = "amd"
+                            hardware_info["gpu_name"] = "AMD GPU"
+                            hardware_info["is_high_perf"] = False
+                            hardware_info["is_low_perf"] = False
+                            hardware_info["perf_level"] = "mid"  # 默认中性能
+                            print(f"【硬件检测】检测到AMD显卡（Windows）")
+                    elif platform.system() == "Linux":
+                        # Linux: 使用lspci命令
+                        result = subprocess.run(['lspci', '-nn'], capture_output=True, text=True, timeout=5)
+                        gpu_info = result.stdout
+                        if 'amd' in gpu_info.lower() or 'radeon' in gpu_info.lower():
+                            hardware_info["gpu_vendor"] = "amd"
+                            hardware_info["gpu_name"] = "AMD GPU"
+                            hardware_info["is_high_perf"] = False
+                            hardware_info["is_low_perf"] = False
+                            hardware_info["perf_level"] = "mid"  # 默认中性能
+                            print(f"【硬件检测】检测到AMD显卡（Linux）")
+                except Exception:
+                    pass
+                
+                if hardware_info["gpu_vendor"] == "unknown":
+                    print(f"【硬件检测】未检测到NVIDIA CUDA或AMD ROCm显卡，自动使用CPU/通用显卡兼容模式")
+        except Exception as e:
+            print(f"【提示】AMD显卡检测失败，自动使用兼容模式：{e}")
     
     print(f"【硬件检测】CPU核心数：{hardware_info['cpu_cores']}")
     return hardware_info
@@ -693,22 +791,26 @@ class LLAMA_CPP_STORAGE:
             
             # 计算推荐的最大GPU层数（仅在 GPU 模式下）
             recommended_gpu_layers = n_gpu_layers
-            if device_mode == "GPU" and HARDWARE_INFO["has_cuda"] and n_gpu_layers > 0:
+            if device_mode == "GPU" and (HARDWARE_INFO["has_cuda"] or HARDWARE_INFO["has_rocm"]) and n_gpu_layers > 0:
                 # 根据显存大小计算推荐的GPU层数
                 gpu_vram = HARDWARE_INFO["gpu_vram_total"]
+                gpu_vendor = HARDWARE_INFO["gpu_vendor"]
                 
                 # 估算模型在GPU中占用的显存（包括上下文）
                 estimated_vram_usage = 0
                 try:
                     model_file_size = os.path.getsize(model_path) / (1024 ** 3)  # GB
-                    estimated_vram_usage = model_file_size * 1.8  # 考虑模型加载到显存后的膨胀和上下文开销
+                    # AMD ROCm的显存开销略高于NVIDIA CUDA
+                    vram_multiplier = 1.9 if gpu_vendor == "amd" else 1.8
+                    estimated_vram_usage = model_file_size * vram_multiplier
                     
                     if enable_mmproj and mmproj != "None":
                         mmproj_file_size = os.path.getsize(os.path.join(folder_paths.models_dir, 'LLM', mmproj)) / (1024 ** 3)
                         estimated_vram_usage += mmproj_file_size * 1.2
                     
-                    # 预留1.5GB给系统和其他进程
-                    available_vram = gpu_vram - 1.5
+                    # 预留显存给系统和其他进程（AMD需要更多预留）
+                    reserved_vram = 2.0 if gpu_vendor == "amd" else 1.5
+                    available_vram = gpu_vram - reserved_vram
                     
                     if estimated_vram_usage > available_vram and n_gpu_layers == -1:
                         # 如果模型需要的显存超过可用显存，自动降低GPU层数
@@ -725,18 +827,52 @@ class LLAMA_CPP_STORAGE:
                 print(f"【提示】CPU 模式：跳过显存估算")
             
             # 构建模型参数
+            gpu_vendor = HARDWARE_INFO["gpu_vendor"]
+            
+            # 根据GPU厂商和性能级别调整参数
+            if gpu_vendor == "amd":
+                # AMD ROCm优化参数
+                n_batch = 1024  # AMD ROCm的批处理大小较小
+                n_threads = os.cpu_count() or 8
+                n_threads_batch = os.cpu_count() or 8
+                use_mmap = False  # AMD ROCm通常不需要mmap
+                use_mlock = True  # AMD ROCm建议使用mlock
+                f16_kv = True  # AMD ROCm支持f16 KV缓存
+                low_vram = HARDWARE_INFO["is_low_perf"]
+            else:
+                # NVIDIA CUDA优化参数
+                n_batch = 2048
+                n_threads = os.cpu_count() or 8
+                n_threads_batch = os.cpu_count() or 16
+                use_mmap = True
+                use_mlock = False
+                f16_kv = True
+                low_vram = HARDWARE_INFO["is_low_perf"]
+            
             llama_kwargs = {
                 "model_path": model_path,
                 "chat_handler": cls.chat_handler,
                 "n_gpu_layers": recommended_gpu_layers,
                 "n_ctx": n_ctx,
-                "n_batch": 2048,  # 从 512 增加到 2048，提升多模态图像处理速度
+                "n_batch": n_batch,
                 "verbose": False,
-                "n_threads": os.cpu_count() or 8,
-                "n_threads_batch": os.cpu_count() or 16,
-                "low_vram": HARDWARE_INFO["is_low_perf"] if device_mode == "GPU" else True,  # CPU 模式强制启用低显存模式
+                "n_threads": n_threads,
+                "n_threads_batch": n_threads_batch,
+                "low_vram": low_vram if device_mode == "GPU" else True,  # CPU 模式强制启用低显存模式
                 "tensor_split": None,
+                "use_mmap": use_mmap,
+                "use_mlock": use_mlock,
+                "f16_kv": f16_kv,
             }
+            
+            # AMD ROCm特定优化
+            if gpu_vendor == "amd":
+                print(f"【AMD优化】应用ROCm特定优化参数")
+                print(f"【AMD优化】n_batch={n_batch}, n_threads={n_threads}, n_threads_batch={n_threads_batch}")
+                print(f"【AMD优化】use_mmap={use_mmap}, use_mlock={use_mlock}, f16_kv={f16_kv}")
+            else:
+                print(f"【NVIDIA优化】应用CUDA特定优化参数")
+                print(f"【NVIDIA优化】n_batch={n_batch}, n_threads={n_threads}, n_threads_batch={n_threads_batch}")
             
             # 尝试加载模型，失败时提供降级策略
             try:
