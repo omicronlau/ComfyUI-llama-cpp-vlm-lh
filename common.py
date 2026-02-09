@@ -660,6 +660,35 @@ class LLAMA_CPP_STORAGE:
                                 except Exception:
                                     init_params.pop("mmproj", None)
                                     init_params["clip_model_path"] = mmproj_path
+                        else:
+                            # 即使没有mmproj_path，也为需要clip_model_path的ChatHandler添加默认参数
+                            try:
+                                sig = inspect.signature(backup_cls.__init__)
+                                if "clip_model_path" in sig.parameters:
+                                    init_params["clip_model_path"] = ""
+                                    print(f"【调试】为{backup_cls.__name__}添加默认clip_model_path参数")
+                                elif "mmproj" in sig.parameters:
+                                    init_params["mmproj"] = ""
+                                    print(f"【调试】为{backup_cls.__name__}添加默认mmproj参数")
+                            except Exception:
+                                # 如果无法获取签名，尝试两种参数名
+                                try:
+                                    init_params["clip_model_path"] = ""
+                                except Exception:
+                                    init_params.pop("clip_model_path", None)
+                                    init_params["mmproj"] = ""
+                        
+                        # 特殊处理：如果是Qwen3VLChatHandler，确保它有必要的参数
+                        if backup_cls.__name__ == "Qwen3VLChatHandler":
+                            # 为Qwen3VLChatHandler添加必要的参数
+                            # 只添加clip_model_path参数，避免与Llava15ChatHandler冲突
+                            if "clip_model_path" not in init_params:
+                                init_params["clip_model_path"] = mmproj_path if mmproj_path else ""
+                                print(f"【调试】为Qwen3VLChatHandler添加clip_model_path参数：{init_params['clip_model_path']}")
+                            # 移除可能冲突的mmproj参数
+                            if "mmproj" in init_params:
+                                init_params.pop("mmproj")
+                                print(f"【调试】移除Qwen3VLChatHandler的mmproj参数，避免与Llava15ChatHandler冲突")
                         
                         # 初始化ChatHandler
                         chat_handler = backup_cls(**init_params)
