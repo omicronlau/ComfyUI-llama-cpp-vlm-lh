@@ -194,28 +194,28 @@ Please see [Multi_Image_Input_Usage_Guide.md](./doc/Multi_Image_Input_Usage_Guid
 ## Workflow Examples
 
 ### Workflow Files
-- [Text or Image Mode Workflow](./workflows/llama-cpp-vlmforQo(text or image).json)
+- [Text or Image Mode Workflow](./workflows/llama-cpp-vlmforQo(text-image).json)
 - [Video Mode Workflow](./workflows/llama-cpp-vlmforQo(video).json)
 
 ### Workflow Example Images
 
 #### Text Generation
-![Text Generation Workflow Example preview](./workflows/Text Generation.png)
+![Text Generation Workflow Example](./workflows/Text-Generation.png)
 
 #### Image Processing
-![Batch Image Processing Workflow Example preview](./workflows/Batch lmage Processing.png)
+![Batch Image Processing Workflow Example](./workflows/Batch-lmage-Processing.png)
 
-![Image Reverse Engineering Workflow Example preview](./workflows/Image reverse engineering.png)
+![Image Reverse Engineering Workflow Example](./workflows/Image-reverse-engineering.png)
 
 #### Video Processing
-![Video Text Generation Workflow Example preview](./workflows/Video Text Generation.png)
+![Video Text Generation Workflow Example](./workflows/Video-Text-Generation.png)
 
-![Video Frame Mode Workflow Example preview](./workflows/Video frame mode.png)
+![Video Frame Mode Workflow Example](./workflows/Video-frame-mode.png)
 
-![Video Reverse Engineering Workflow Example preview](./workflows/Video reverse engineering.png)
+![Video Reverse Engineering Workflow Example](./workflows/Video-reverse-engineering.png)
 
 #### Multi-Image Video Text Generation
-![Multi-Image Video Text Generation Workflow Example preview](./workflows/Multi-lmage Video Text Generation.png)
+![Multi-Image Video Text Generation Workflow Example](./workflows/Multi-lmage-Video-Text-Generation.png)
 
 ## Usage Guide (Adjust according to your computer configuration)
 
