@@ -82,6 +82,8 @@ class llama_cpp_model_loader:
             # 模型名称映射到对话格式处理器
             model_handler_map = {
                 "Qwen2.5-VL": "Qwen2.5-VL",
+                "Qwen3-VL": "Qwen3-VL",
+                "Qwen3-VL-Chat": "Qwen3-VL-Chat",
                 "Qwen3-VL-Instruct": "Qwen3-VL-Instruct",
                 "olmOCR-2-7B-1025": "olmOCR-2",
                 "llava-1.6-mistral-7b": "LLaVA-1.6",
@@ -138,6 +140,8 @@ class llama_cpp_model_loader:
             # 模型名称映射到对话格式处理器
             model_handler_map = {
                 "Qwen2.5-VL": "Qwen2.5-VL",
+                "Qwen3-VL": "Qwen3-VL",
+                "Qwen3-VL-Chat": "Qwen3-VL-Chat",
                 "Qwen3-VL-Instruct": "Qwen3-VL-Instruct",
                 "olmOCR-2-7B-1025": "olmOCR-2",
                 "llava-1.6-mistral-7b": "LLaVA-1.6",
