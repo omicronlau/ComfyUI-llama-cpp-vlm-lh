@@ -1,3 +1,4 @@
+# @亲卿于情 修改版本
 # -*- coding: utf-8 -*-
 """
 ComfyUI-llama-cpp-vlmforQo 节点包
@@ -10,6 +11,7 @@ from .nodes.llama_cpp_parameters import llama_cpp_parameters
 from .nodes.llama_cpp_clean_states import llama_cpp_clean_states
 from .nodes.llama_cpp_unload_model import llama_cpp_unload_model
 from .nodes.json_to_bbox import json_to_bbox
+from .nodes.multi_image_input import MultiImageInput
 
 # 节点映射关系，ComfyUI通过这个字典识别节点
 NODE_CLASS_MAPPINGS = {
@@ -19,6 +21,7 @@ NODE_CLASS_MAPPINGS = {
     "llama_cpp_clean_states": llama_cpp_clean_states,
     "llama_cpp_unload_model": llama_cpp_unload_model,
     "json_to_bbox": json_to_bbox,
+    "multi_image_input": MultiImageInput,
 }
 
 # 节点显示名称映射，在ComfyUI界面中显示的名称
@@ -29,6 +32,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "llama_cpp_clean_states": "Llama-cpp Clean States",
     "llama_cpp_unload_model": "Llama-cpp Unload Model",
     "json_to_bbox": "JSON to Bounding Box",
+    "multi_image_input": "Multi-Image Input (Story Creation)",
 }
 
 # 导出所有映射关系

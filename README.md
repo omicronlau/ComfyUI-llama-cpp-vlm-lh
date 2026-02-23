@@ -28,6 +28,7 @@ Compared to similar plugins, this project has achieved significant breakthroughs
 - **Video Processing Capability**: Added video input support, enabling video content analysis and reverse generation
 - **CPU/GPU Mode**: Freely switch between runtime modes to adapt to different hardware configurations
 - **Hardware Detection Optimization**: Automatically detect hardware performance and recommend optimal parameter configurations
+- **Multi-Image Input Node**: Supports dual-mode operation for image analysis and text-based prompt generation with rich customization options for content creation
 
 
 ## Chinese Translation
@@ -64,6 +65,26 @@ The supported model types are synchronized with llama_cpp_python version. Common
 
 
 ## Changelog
+#### 2026-02-23
+- Added Multi-Image Input node with the following features:
+  - Dual mode operation: Image mode analyzes multiple images and creates stories, Text mode generates prompts through option settings
+  - Multi-image input support: Supports 1-6 image inputs with automatic preprocessing and encoding
+  - Rich content creation types: Supports 10 types including Coherent Story, Storyboard Description, Scene Analysis, Character Development, Emotional Progression, Creative Writing, Script Creation, Advertising Copy, Product Introduction, Educational Content
+  - Flexible length control: Supports 4 length options - Short (200 words), Medium (400 words), Detailed (600 words), Complete (1000 words)
+  - Multi-language support: Supports Chinese and English output
+  - Rich theme selection: Supports 12 themes including Adventure, Romance, Mystery, Sci-Fi, Fantasy, Daily Life, Historical, Future Technology, Business Marketing, Educational Popularization, Entertainment Comedy
+  - Diverse narrative styles: Supports 4 styles including First Person, Third Person, Omniscient Perspective, Multi-Perspective Switching
+  - Content focus control: Supports 6 focus areas including Balanced Development, Emphasize Plot, Emphasize Characters, Emphasize Emotions, Emphasize Visuals, Emphasize Dialogue
+  - Target audience customization: Supports 5 audience types including General Public, Teenagers, Children, Professionals, Specific Groups
+  - Video model optimization: Optimizes prompt formats for different video generation models including WAN2.2, LTX2, General Video, Custom
+  - Custom prompt support: Supports adding custom prompts to guide content creation
+  - Image description control: Option to include or exclude image descriptions before the story
+- Fixed translation file not working issue, corrected JSON syntax errors
+- Fixed README document link format, converted plain text to Markdown link format
+- Added Multi-Image Input node usage documentation link
+- Optimized workflow examples section, updated example images and file links based on actual workflows folder content
+- Improved documentation structure, enhanced user experience
+
 #### 2026-02-08
 - Added multiple new preset prompt templates: Bilingual Prompt Generate, Ultra HD Image Reverse
 - Optimized model loading and inference workflow for improved efficiency
@@ -140,7 +161,11 @@ Please see (./doc/model_series_introduction_and_links.md)
 
 ## Node Parameter Settings and Recommended Configurations
 
-Please see (./doc/Parameter-Explanation-and-Recommended-Settings.md)
+Please see [Parameter-Explanation-and-Recommended-Settings.md](./doc/Parameter-Explanation-and-Recommended-Settings.md)
+
+## Multi-Image Input Node Usage Guide
+
+Please see [Multi_Image_Input_Usage_Guide.md](./doc/Multi_Image_Input_Usage_Guide.md)
 
 ## Installation Instructions
 
@@ -168,13 +193,29 @@ Please see (./doc/Parameter-Explanation-and-Recommended-Settings.md)
 
 ## Workflow Examples
 
-[Workflow File](./workflows/llama-cpp-vlmforQo.json)
+### Workflow Files
+- [Text or Image Mode Workflow](./workflows/llama-cpp-vlmforQo(text or image).json)
+- [Video Mode Workflow](./workflows/llama-cpp-vlmforQo(video).json)
 
-![Workflow Example - Text Mode](./workflows/TEXT.png)
+### Workflow Example Images
 
-![Workflow Example - Image Mode](./workflows/Image.png)
+#### Text Generation
+![Workflow Example - Text Generation](./workflows/Text Generation.png)
 
-![Workflow Example - Video Mode](./workflows/Video.png)
+#### Image Processing
+![Workflow Example - Batch Image Processing](./workflows/Batch lmage Processing.png)
+
+![Workflow Example - Image Reverse Engineering](./workflows/Image reverse engineering.png)
+
+#### Video Processing
+![Workflow Example - Video Text Generation](./workflows/Video Text Generation.png)
+
+![Workflow Example - Video Frame Mode](./workflows/Video frame mode.png)
+
+![Workflow Example - Video Reverse Engineering](./workflows/Video reverse engineering.png)
+
+#### Multi-Image Video Text Generation
+![Workflow Example - Multi-Image Video Text Generation](./workflows/Multi-lmage Video Text Generation.png)
 
 ## Usage Guide (Adjust according to your computer configuration)
 
@@ -199,9 +240,73 @@ Please see (./doc/Parameter-Explanation-and-Recommended-Settings.md)
    - Use the `Llama-cpp Clean Session` node to release session resources
    - Use the `Llama-cpp Unload Model` node to release model resources
 
-Note: For detailed parameter explanations, please see (./doc/Parameter-Explanation-and-Recommended-Settings.md)
+Note: For detailed parameter explanations, please see [Parameter-Explanation-and-Recommended-Settings.md](./doc/Parameter-Explanation-and-Recommended-Settings.md)
 
-### 1.1 CPU/GPU Runtime Mode Selection
+### 1.1 Multi-Image Input Node Usage
+
+The Multi-Image Input node supports dual-mode operation for content creation:
+
+#### Image Mode Usage
+1. **Prepare Images (1-6 images)**:
+   - Ensure image content is coherent and has storytelling potential
+   - Images can be continuous scenes or different scene fragments
+
+2. **Configure Multi-Image Input Node**:
+   - Select `mode` as "Image Mode"
+   - Connect image inputs to `image1` through `image6` ports (at least one connection required)
+   - Select `story_type` (recommend "Coherent Story" or "Storyboard Description")
+   - Select `story_length` (usually requires within 400 words)
+   - Select `language` (Chinese or English)
+   - Select `video_model` (WAN2.2/LTX2/General Video/Custom)
+   - Adjust other parameters (theme, narrative style, etc.)
+
+3. **Connect to Llama-cpp Image Inference Node**:
+   - Connect `prompt` output to `custom_prompt` input
+   - Connect `images` output to `images` input
+   - In Llama-cpp Image Inference node:
+     - `inference_mode` select "images"
+     - `preset_prompt` select "[Creative] Short Story"
+     - `output_language` select the same language as Multi-Image Input
+
+4. **Get Story Content**:
+   - Run the workflow
+   - Wait for model processing
+   - Get the generated story content
+
+5. **Use for Video Generation**:
+   - Based on the selected `video_model` type, copy the story content to the corresponding video generation model (WAN2.2, LTX2, etc.) prompt input
+   - Adjust video parameters based on story content
+   - Generate video
+
+#### Text Mode Usage
+1. **Configure Multi-Image Input Node**:
+   - Select `mode` as "Text Mode"
+   - No need to connect any images
+   - Select `story_type` (according to needs)
+   - Select `story_length` (according to content length needs)
+   - Select `language` (Chinese or English)
+   - Configure other parameters (theme, narrative style, content focus, target audience)
+   - Optional: Add `custom_prompt` for custom requirements
+
+2. **Connect to Llama-cpp Image Inference Node**:
+   - Connect `prompt` output to `custom_prompt` input
+   - No need to connect `images` output (text mode returns None)
+   - In Llama-cpp Image Inference node:
+     - `inference_mode` select "text"
+     - `preset_prompt` select "[Creative] Short Story" or other appropriate preset
+     - `output_language` select the same language as Multi-Image Input
+
+3. **Get Generated Content**:
+   - Run the workflow
+   - Wait for model processing
+   - Get the generated content
+
+4. **Use Generated Content**:
+   - Use for video generation (WAN2.2, LTX2, etc.)
+   - Use for other text generation applications
+   - Use for creative writing or content creation
+
+### 1.2 CPU/GPU Runtime Mode Selection
 
 The plugin supports flexible CPU and GPU runtime mode selection, allowing users to freely choose based on hardware configuration and needs:
 
@@ -249,6 +354,19 @@ The plugin automatically selects appropriate runtime mode based on hardware perf
 - **Monitor performance**: When using GPU mode, monitor VRAM usage
 
 ### 2. Recommended Workflows
+
+#### Multi-Image Input Workflow
+1. Load model (e.g., Qwen3-VL)
+2. Connect images (1-6 images) to Multi-Image Input node
+3. Configure Multi-Image Input node:
+   - Select mode (Image Mode or Text Mode)
+   - Choose story type, length, theme, narrative style, etc.
+   - Select video model type (WAN2.2, LTX2, General Video, Custom)
+4. Connect Multi-Image Input to Llama-cpp Image Inference node:
+   - Connect `prompt` output to `custom_prompt` input
+   - Connect `images` output to `images` input (for Image Mode)
+5. Execute inference to get story content
+6. Use generated story for video generation
 
 #### Prompt Generation Workflow
 1. Load model (e.g., Qwen3-VL)

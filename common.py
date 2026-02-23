@@ -1,3 +1,4 @@
+# @亲卿于情 修改版本
 # -*- coding: utf-8 -*-
 """
 ComfyUI-llama-cpp-vlmforQo 公共组件
