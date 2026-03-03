@@ -317,6 +317,8 @@ class llama_cpp_instruct_adv:
         _uid = parameters.get("state_uid", None)
         _parameters = parameters.copy()
         _parameters.pop("state_uid", None)
+        _parameters.pop("presence_penalty", None)
+        _parameters.pop("frequency_penalty", None)
         uid = unique_id.rpartition('.')[-1] if _uid in (None, -1) else _uid
         last_sys_prompt = llama_model.sys_prompts.get(f"{uid}", None)
         
